@@ -1,0 +1,9 @@
+selected_serialPort=COM24
+baudRate=115200
+dataBits=8
+parity=0
+stopBits=0
+useDtr=true
+useRts=false
+add_nl=true
+add_cr=true

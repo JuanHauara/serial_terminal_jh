@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+
+    "tasks": [
+        {
+            "label": "Configure & Compile",
+            "type": "shell",
+            "windows": {
+                "command": "if (!(Test-Path -Path '${workspaceFolder}/build')) { New-Item -Path '${workspaceFolder}/build' -ItemType Directory }; Set-Location -Path '${workspaceFolder}/build'; cmake -G 'MinGW Makefiles' .. && C:/TDM-GCC-64/bin/mingw32-make.exe",
+            },
+            "linux": {
+                "command": "mkdir -p '${workspaceFolder}/build/' && cd '${workspaceFolder}/build/' && cmake .. && cmake --build ."
+            },
+            "osx": {
+                "command": "mkdir -p '${workspaceFolder}/build/' && cd '${workspaceFolder}/build/' && cmake .. && cmake --build ."
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "windows": {
+                "command": "Remove-Item -Path 'build' -Recurse -Force"
+            },
+            "linux": {
+                "command": "rm build"
+            },
+            "osx": {
+                "command": "rm build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+        
+    ]
+}
