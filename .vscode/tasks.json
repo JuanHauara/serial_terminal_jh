@@ -1,45 +1,52 @@
 {
     "version": "2.0.0",
-
     "tasks": [
         {
-            "label": "Configure & Compile",
+            "label": "Configure & Build", // Cambiado a Build para reflejar mejor la acción
             "type": "shell",
             "windows": {
-                "command": "if (!(Test-Path -Path '${workspaceFolder}/build')) { New-Item -Path '${workspaceFolder}/build' -ItemType Directory }; Set-Location -Path '${workspaceFolder}/build'; cmake -G 'MinGW Makefiles' .. && C:/TDM-GCC-64/bin/mingw32-make.exe",
+                // Comando corregido para PowerShell y usando cmake --build
+                "command": "if (!(Test-Path -Path '${workspaceFolder}/build')) { New-Item -Path '${workspaceFolder}/build' -ItemType Directory }; Set-Location -Path '${workspaceFolder}/build'; cmake -G 'MinGW Makefiles' ..; if ($?) { cmake --build . }"
             },
             "linux": {
+                // Ya usaba cmake --build ., está bien
                 "command": "mkdir -p '${workspaceFolder}/build/' && cd '${workspaceFolder}/build/' && cmake .. && cmake --build ."
             },
             "osx": {
+                 // Ya usaba cmake --build ., está bien
                 "command": "mkdir -p '${workspaceFolder}/build/' && cd '${workspaceFolder}/build/' && cmake .. && cmake --build ."
             },
             "options": {
+                // cwd ya está bien, asegura que los comandos relativos como 'build' o '..' funcionen
                 "cwd": "${workspaceFolder}"
             },
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true // Puedes ponerlo a true si quieres que sea la tarea por defecto (Ctrl+Shift+B)
             },
-            "problemMatcher": []
+            "problemMatcher": [
+                "$gcc" // Añadido problem matcher para errores de GCC
+            ]
         },
         {
             "label": "Clean",
             "type": "shell",
             "windows": {
-                "command": "Remove-Item -Path 'build' -Recurse -Force"
+                 // Este comando está bien para PowerShell
+                "command": "if (Test-Path -Path '${workspaceFolder}/build') { Remove-Item -Path '${workspaceFolder}/build' -Recurse -Force }"
             },
             "linux": {
-                "command": "rm build"
+                // rm necesita -r -f para borrar directorios no vacíos de forma segura
+                "command": "rm -rf '${workspaceFolder}/build'"
             },
             "osx": {
-                "command": "rm build"
+                 // rm necesita -r -f para borrar directorios no vacíos de forma segura
+                "command": "rm -rf '${workspaceFolder}/build'"
             },
             "options": {
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         }
-        
     ]
 }

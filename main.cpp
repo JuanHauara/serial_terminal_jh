@@ -39,7 +39,7 @@ using namespace chrono;
 const wxString SOFTWARE_VERSION("v0.1.2");
 const wxString WINDOW_TITLE("Serial Terminal");
 const wxString EMAIL_CONTACT("juanhauara@gmail.com");
-const wxString WEB_CONTACT("Juan Hauara");
+const wxString WEB_CONTACT("");
 
 const wxSize WINDOW_SIZE = wxSize(550, 550);
 const wxColour WINDOWS_COLOR = wxColour(233, 233, 233);
@@ -778,7 +778,10 @@ void Frame_main::OnMenu_about(wxCommandEvent &event)
 	aboutText += wxT("      Version: ") + SOFTWARE_VERSION + wxT("\n\n");
 	aboutText += wxT("      Author: Juan Hauara\n\n");
 	aboutText += wxT("      Email: ") + EMAIL_CONTACT + wxT("\n\n");
-	aboutText += wxT("      Web: ") + WEB_CONTACT + wxT("\n\n");
+	if (!WEB_CONTACT.IsEmpty())
+	{
+		aboutText += wxT("      Web: ") + WEB_CONTACT + wxT("\n\n");
+	}
 	
 	wxMessageDialog *dialog = new wxMessageDialog(NULL, aboutText, wxT("About"), wxOK | wxICON_INFORMATION);
 	dialog->ShowModal();
