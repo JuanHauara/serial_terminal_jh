@@ -1,5 +1,4 @@
-# Ignorar todo el contenido de la carpeta build
-#build/
-
-# Pero no ignorar los archivos .exe dentro de la carpeta build
-!build/*.exe
+#build/CMakeFiles
+#build/*.cmake
+#build/Makefile
+#build/*.txt

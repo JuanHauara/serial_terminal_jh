@@ -1,3 +1,0 @@
-C:\cmake\bin\cmake.exe -E rm -f CMakeFiles\serial_terminal.dir/objects.a
-C:\TDM-GCC-64\bin\ar.exe qc CMakeFiles\serial_terminal.dir/objects.a @CMakeFiles\serial_terminal.dir\objects1.rsp
-C:\TDM-GCC-64\bin\c++.exe -mwindows -Wl,--whole-archive CMakeFiles\serial_terminal.dir/objects.a -Wl,--no-whole-archive -o serial_terminal.exe -Wl,--out-implib,libserial_terminal.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\serial_terminal.dir\linkLibs.rsp
