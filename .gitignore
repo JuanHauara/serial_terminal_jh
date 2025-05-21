@@ -1,4 +1,4 @@
-#build/CMakeFiles
-#build/*.cmake
-#build/Makefile
-#build/*.txt
+build/CMakeFiles
+build/*.cmake
+build/Makefile
+build/*.txt
