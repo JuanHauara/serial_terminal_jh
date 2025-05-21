@@ -1,0 +1,1 @@
+-IC:/prog/proyectos_cpp/serial_terminal/library -IC:/prog/proyectos_cpp/serial_terminal/library/SerialPortWindows -IC:/prog/proyectos_cpp/serial_terminal/library/Persistent_data -isystem "C:/wxWidgets-3.2.8/lib/gcc_lib/mswu" -isystem "C:/wxWidgets-3.2.8/include"

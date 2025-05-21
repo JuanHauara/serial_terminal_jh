@@ -1,0 +1,3 @@
+C:/prog/proyectos_cpp/serial_terminal/build/CMakeFiles/serial_terminal.dir
+C:/prog/proyectos_cpp/serial_terminal/build/CMakeFiles/edit_cache.dir
+C:/prog/proyectos_cpp/serial_terminal/build/CMakeFiles/rebuild_cache.dir
