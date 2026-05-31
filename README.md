@@ -32,7 +32,7 @@ To compile the project on Windows using MinGW (like TDM-GCC):
 
 ## Single Command Build
 
-You can also configure and build using a single command line, which can be useful for setting up build commands in editors like Geany:
+You can also configure and build using a single command line, which can be useful for setting up build commands in some IDEs:
 
 ```bash
 cmake -G "MinGW Makefiles" .. && C:/TDM-GCC-64/bin/mingw32-make.exe

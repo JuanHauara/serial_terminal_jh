@@ -56,7 +56,7 @@ class SerialPort : public wxTimer
 		string getLastError(void);
 		
 	private:
-		char serialPort[10];
+		string serialPort;
 		uint32_t baudRate = 0;
 		int32_t dataBits = 8;
 		int32_t parity = NOPARITY;

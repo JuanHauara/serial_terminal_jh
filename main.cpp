@@ -36,7 +36,7 @@ using namespace chrono;
 	#include "SerialPortWindows.h"
 #endif
 
-const wxString SOFTWARE_VERSION("v0.1.2");
+const wxString SOFTWARE_VERSION("v0.1.3");
 const wxString WINDOW_TITLE("Serial Terminal");
 const wxString EMAIL_CONTACT("juanhauara@gmail.com");
 const wxString WEB_CONTACT("");
@@ -992,11 +992,11 @@ void Frame_main::OnClick_send(wxCommandEvent &event)
 	else
 	{
 		// Muestra diálogo avisando que no está conectado.
-		wxMessageDialog *dialog = new wxMessageDialog(NULL, wxT("Not connected!"), wxT(""), wxOK | wxICON_EXCLAMATION);
+		wxMessageDialog *dialog = new wxMessageDialog(NULL, wxT("Not connected"), wxT(""), wxOK | wxICON_EXCLAMATION);
 		dialog->ShowModal();
   
 		#if DEBUG_LOG
-		cout << "not connected!" << endl;
+		cout << "not connected" << endl;
 		#endif
 	}
 }

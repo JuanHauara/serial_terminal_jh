@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "-mwindows")
 
 # Librería WxWidgets.
 # Especificar la ruta a la librería wxWidgets instalada.
-set(wxWidgets_ROOT_DIR C:/wxWidgets-3.2.8)
+set(wxWidgets_ROOT_DIR C:/wxWidgets-3.2.10)
 find_package(wxWidgets REQUIRED COMPONENTS core base gl net OPTIONAL_COMPONENTS)
 # Incluir directorios de la librería.
 include(${wxWidgets_USE_FILE})

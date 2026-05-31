@@ -3,10 +3,10 @@
 
 void SerialPort::setSerialPort(string _serialPort)
 {
-	strcpy(serialPort, _serialPort.c_str());
+	serialPort = _serialPort;
 	cout << "Class SerialPortWindows: _serialPort = " << _serialPort << endl;
 	cout << "Class SerialPortWindows: serialPort = " << serialPort << endl;
-	cout << "Class SerialPortWindows: strlen(serialPort) = " << strlen(serialPort) << endl;
+	cout << "Class SerialPortWindows: serialPort.length() = " << serialPort.length() << endl;
 }
 
 void SerialPort::setBaudRate(uint32_t baudRate)
@@ -41,9 +41,7 @@ void SerialPort::useRts(bool flag)
 
 string SerialPort::getSerialPort(void)
 {
-	string _serialPort(serialPort);	// Pasa de cstring a string
-	
-	return _serialPort;
+	return serialPort;
 }
 
 uint32_t SerialPort::getBaudRate(void)
@@ -145,7 +143,8 @@ bool SerialPort::setParameters(void)
 bool SerialPort::connect(void)
 {
 	// https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
-	serialHandle = CreateFileA(serialPort, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	string serialPortPath = "\\\\.\\" + serialPort;
+	serialHandle = CreateFileA(serialPortPath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (serialHandle == INVALID_HANDLE_VALUE)
 	{
