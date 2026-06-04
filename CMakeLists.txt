@@ -19,17 +19,17 @@ find_package(wxWidgets REQUIRED COMPONENTS core base gl net OPTIONAL_COMPONENTS)
 include(${wxWidgets_USE_FILE})
 
 add_executable(${PROJECT_NAME} main.cpp
-	library/SerialPortWindows/SerialPortWindows.h
-	library/SerialPortWindows/SerialPortWindows.cpp
+	library/serial_port_windows/serial_port_windows.h
+	library/serial_port_windows/serial_port_windows.cpp
 	
-	library/Persistent_data/Persistent_data.h
-	library/Persistent_data/Persistent_data.cpp
+	library/persistent_data/persistent_data.h
+	library/persistent_data/persistent_data.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/library"
-	"${PROJECT_SOURCE_DIR}/library/SerialPortWindows"
-    "${PROJECT_SOURCE_DIR}/library/Persistent_data"
+	"${PROJECT_SOURCE_DIR}/library/serial_port_windows"
+    "${PROJECT_SOURCE_DIR}/library/persistent_data"
 )
 
 target_link_libraries(${PROJECT_NAME} 

@@ -4,8 +4,8 @@
 */
 
 
-#ifndef __Persistent_data_h__
-#define __Persistent_data_h__
+#ifndef PERSISTENT_DATA_H
+#define PERSISTENT_DATA_H
 
 
 #include <iostream>
@@ -17,31 +17,31 @@
 using namespace std;
 
 
-class Persistent_data
+class persistent_data
 {
 	public:
-		Persistent_data(string dataFileName);
+		persistent_data(string data_file_name);
 		
-		bool loadData(void);
+		bool load_data(void);
 		
-		int getInt(string _varName);
-		float getFloat(string _varName);
-		string getString(string _varName);
-		bool getBool(string _varName);
+		int get_int(string target_var_name);
+		float get_float(string target_var_name);
+		string get_string(string target_var_name);
+		bool get_bool(string target_var_name);
 		
-		void setInt(string _varName, int _varValue);
-		void setFloat(string _varName, float _varValue);
-		void setString(string _varName, string _varValue);
-		void setBool(string _varName, bool _varValue);
+		void set_int(string target_var_name, int target_var_value);
+		void set_float(string target_var_name, float target_var_value);
+		void set_string(string target_var_name, string target_var_value);
+		void set_bool(string target_var_name, bool target_var_value);
 		
 	private:
-		string dataFileName = "";
-		vector<string> varName;
-		vector<string> varValue;
-		int varCount = 0;  // Indica la cantidad total de variables persistentes.
+		string data_file_name = "";
+		vector<string> var_name;
+		vector<string> var_value;
+		int var_count = 0;  // Indica la cantidad total de variables persistentes.
 		
-		void parseLine(string line, int index);
-		int seekVarIndex(string _varName);
+		void parse_line(string line, int index);
+		int seek_var_index(string target_var_name);
 };
 
 

@@ -16,7 +16,7 @@
 #include <list>
 #include <chrono>
 
-#include "Persistent_data.h"	// Variables persistentes desde un archivo en disco.
+#include "persistent_data.h"	// Variables persistentes desde un archivo en disco.
 
 
 using namespace std;
@@ -33,16 +33,16 @@ using namespace chrono;
 
 #if LINUX_PLATFORM
 #elif WINDOWS_PLATFORM
-	#include "SerialPortWindows.h"
+	#include "serial_port_windows.h"
 #endif
 
-const wxString SOFTWARE_VERSION("v0.1.3");
-const wxString WINDOW_TITLE("Serial Terminal");
-const wxString EMAIL_CONTACT("juanhauara@gmail.com");
-const wxString WEB_CONTACT("");
+const wxString software_version("v0.1.3");
+const wxString window_title("Serial Terminal");
+const wxString email_contact("juanhauara@gmail.com");
+const wxString web_contact("");
 
-const wxSize WINDOW_SIZE = wxSize(550, 550);
-const wxColour WINDOWS_COLOR = wxColour(233, 233, 233);
+const wxSize window_size = wxSize(550, 550);
+const wxColour windows_color = wxColour(233, 233, 233);
 
 #define DEFAULT_BAUD_RATE	9600
 #define DEFAULT_DATA_BITS	8			/* 5, 6, 7, 8 */
@@ -73,171 +73,171 @@ bool menu_settings_up = false;
 //==================================================================
 // Clase Frame principal
 //==================================================================
-class Frame_menu_settings : public wxFrame
+class frame_menu_settings : public wxFrame
 {
 	public:
-		Frame_menu_settings(wxWindow *parent);
+		frame_menu_settings(wxWindow *parent);
 	
 	private:
 		// Widgets
-		wxComboBox *comboBox_dataBits;
-		wxComboBox *comboBox_parity;
-		wxComboBox *comboBox_stopBits;
-		wxCheckBox *checkBox_useDtr;
-		wxCheckBox *checkBox_useRts;
-		wxCheckBox *checkBox_add_nl;
-		wxCheckBox *checkBox_add_cr;
+		wxComboBox *combo_box_data_bits;
+		wxComboBox *combo_box_parity;
+		wxComboBox *combo_box_stop_bits;
+		wxCheckBox *check_box_use_dtr;
+		wxCheckBox *check_box_use_rts;
+		wxCheckBox *check_box_add_nl;
+		wxCheckBox *check_box_add_cr;
 		wxButton *button_default;
 		wxButton *button_save;
 		
 		// Variables
-		int32_t dataBits;
+		int32_t data_bits;
 		int32_t parity;
-		int32_t stopBits;
-		bool useDtr;
-		bool useRts;
+		int32_t stop_bits;
+		bool use_dtr;
+		bool use_rts;
 		bool add_nl;
 		bool add_cr;
 		
-		Persistent_data *persistent_data = new Persistent_data("persistent_data.dat");
+		persistent_data *persistent_store = new persistent_data("persistent_data.dat");
 		
 		// Métodos
-		void setValuesOnWidgets(void);
+		void set_values_on_widgets(void);
 		
 		// Event handlers
-		void OnClose(wxCloseEvent &event);
-		void OnComboBox_dataBits(wxCommandEvent &event);
-		void OnComboBox_parity(wxCommandEvent &event);
-		void OnComboBox_stopBits(wxCommandEvent &event);
-		void OnCheckBox_useDtr(wxCommandEvent &event);
-		void OnCheckBox_useRts(wxCommandEvent &event);
-		void OnCheckBox_add_nl(wxCommandEvent &event);
-		void OnCheckBox_add_cr(wxCommandEvent &event);
-		void OnClick_default(wxCommandEvent &event);
-		void OnClick_save(wxCommandEvent &event);
+		void on_close(wxCloseEvent &event);
+		void on_combo_box_data_bits(wxCommandEvent &event);
+		void on_combo_box_parity(wxCommandEvent &event);
+		void on_combo_box_stop_bits(wxCommandEvent &event);
+		void on_check_box_use_dtr(wxCommandEvent &event);
+		void on_check_box_use_rts(wxCommandEvent &event);
+		void on_check_box_add_nl(wxCommandEvent &event);
+		void on_check_box_add_cr(wxCommandEvent &event);
+		void on_click_default(wxCommandEvent &event);
+		void on_click_save(wxCommandEvent &event);
 };
 
-Frame_menu_settings::Frame_menu_settings(wxWindow *parent) : wxFrame(parent, wxID_ANY, wxT("Serial port settings"), 
+frame_menu_settings::frame_menu_settings(wxWindow *parent) : wxFrame(parent, wxID_ANY, wxT("Serial port settings"), 
 wxDefaultPosition, wxSize(240, 370), wxCAPTION | wxCLOSE_BOX | wxFRAME_FLOAT_ON_PARENT)
 {
 	CentreOnScreen();
 	
-	// Cuando se da click al botón de cerrar ventana llama al método OnClose().
-	Bind(wxEVT_CLOSE_WINDOW, &Frame_menu_settings::OnClose, this);
+	// Cuando se da click al botón de cerrar ventana llama al método on_close().
+	Bind(wxEVT_CLOSE_WINDOW, &frame_menu_settings::on_close, this);
 	
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
-	panel->SetBackgroundColour(WINDOWS_COLOR);
+	panel->SetBackgroundColour(windows_color);
 	
 	
 	// Configuración de widgets
 	// statics texts
-	wxStaticText *staticText_dataBits = new wxStaticText(panel, wxID_ANY, wxT("Data bits:"));
-	wxStaticText *staticText_parity = new wxStaticText(panel, wxID_ANY, wxT("Parity:"));
-	wxStaticText *staticText_stopBits = new wxStaticText(panel, wxID_ANY, wxT("Stop bits:"));
-	wxStaticText *staticText_flowControl = new wxStaticText(panel, wxID_ANY, wxT("Flow control:"));
-	wxStaticText *staticText_add_to_message = new wxStaticText(panel, wxID_ANY, wxT("Add to message:"));
+	wxStaticText *static_text_data_bits = new wxStaticText(panel, wxID_ANY, wxT("Data bits:"));
+	wxStaticText *static_text_parity = new wxStaticText(panel, wxID_ANY, wxT("Parity:"));
+	wxStaticText *static_text_stop_bits = new wxStaticText(panel, wxID_ANY, wxT("Stop bits:"));
+	wxStaticText *static_text_flow_control = new wxStaticText(panel, wxID_ANY, wxT("Flow control:"));
+	wxStaticText *static_text_add_to_message = new wxStaticText(panel, wxID_ANY, wxT("Add to message:"));
 	
 	
 	// comboBox data bits
-	wxArrayString dataBitsChoices;
-	dataBitsChoices.Add(wxT("5"));	// Atención: No cambiar valor
-	dataBitsChoices.Add(wxT("6"));	// Atención: No cambiar valor
-	dataBitsChoices.Add(wxT("7"));	// Atención: No cambiar valor
-	dataBitsChoices.Add(wxT("8"));	// Atención: No cambiar valor
-	comboBox_dataBits = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(95, -1), dataBitsChoices, wxCB_READONLY);
-	comboBox_dataBits->Bind(wxEVT_COMBOBOX, &Frame_menu_settings::OnComboBox_dataBits, this);
+	wxArrayString data_bits_choices;
+	data_bits_choices.Add(wxT("5"));	// Atención: No cambiar valor
+	data_bits_choices.Add(wxT("6"));	// Atención: No cambiar valor
+	data_bits_choices.Add(wxT("7"));	// Atención: No cambiar valor
+	data_bits_choices.Add(wxT("8"));	// Atención: No cambiar valor
+	combo_box_data_bits = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(95, -1), data_bits_choices, wxCB_READONLY);
+	combo_box_data_bits->Bind(wxEVT_COMBOBOX, &frame_menu_settings::on_combo_box_data_bits, this);
 	
 	// comboBox paridad
-	wxArrayString parityChoices;
-	parityChoices.Add(WXT_NO_PARITY);
-	parityChoices.Add(WXT_EVEN_PARITY);
-	parityChoices.Add(WXT_ODD_PARITY);
-	comboBox_parity = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(95, -1), parityChoices, wxCB_READONLY);
-	comboBox_parity->Bind(wxEVT_COMBOBOX, &Frame_menu_settings::OnComboBox_parity, this);
+	wxArrayString parity_choices;
+	parity_choices.Add(WXT_NO_PARITY);
+	parity_choices.Add(WXT_EVEN_PARITY);
+	parity_choices.Add(WXT_ODD_PARITY);
+	combo_box_parity = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(95, -1), parity_choices, wxCB_READONLY);
+	combo_box_parity->Bind(wxEVT_COMBOBOX, &frame_menu_settings::on_combo_box_parity, this);
 	
 	// comboBox stop bits
-	wxArrayString stopBitsChoices;
-	stopBitsChoices.Add(WXT_1_STOP_BIT);
-	stopBitsChoices.Add(WXT_15_STOP_BITS);
-	stopBitsChoices.Add(WXT_2_STOP_BITS);
-	comboBox_stopBits = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(95, -1), stopBitsChoices, wxCB_READONLY);
-	comboBox_stopBits->Bind(wxEVT_COMBOBOX, &Frame_menu_settings::OnComboBox_stopBits, this);
+	wxArrayString stop_bits_choices;
+	stop_bits_choices.Add(WXT_1_STOP_BIT);
+	stop_bits_choices.Add(WXT_15_STOP_BITS);
+	stop_bits_choices.Add(WXT_2_STOP_BITS);
+	combo_box_stop_bits = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(95, -1), stop_bits_choices, wxCB_READONLY);
+	combo_box_stop_bits->Bind(wxEVT_COMBOBOX, &frame_menu_settings::on_combo_box_stop_bits, this);
 	
 	
 	// Check box usar DTR
-	checkBox_useDtr = new wxCheckBox(panel, wxID_ANY, wxT("enable DTR"), wxDefaultPosition, wxDefaultSize);
-	checkBox_useDtr->Bind(wxEVT_CHECKBOX, &Frame_menu_settings::OnCheckBox_useDtr, this);
+	check_box_use_dtr = new wxCheckBox(panel, wxID_ANY, wxT("enable DTR"), wxDefaultPosition, wxDefaultSize);
+	check_box_use_dtr->Bind(wxEVT_CHECKBOX, &frame_menu_settings::on_check_box_use_dtr, this);
 	
 	// Check box usar RTS
-	checkBox_useRts = new wxCheckBox(panel, wxID_ANY, wxT("enable RTS"), wxDefaultPosition, wxDefaultSize);
-	checkBox_useRts->Bind(wxEVT_CHECKBOX, &Frame_menu_settings::OnCheckBox_useRts, this);
+	check_box_use_rts = new wxCheckBox(panel, wxID_ANY, wxT("enable RTS"), wxDefaultPosition, wxDefaultSize);
+	check_box_use_rts->Bind(wxEVT_CHECKBOX, &frame_menu_settings::on_check_box_use_rts, this);
 	
 	
 	// Check box add new line
-	checkBox_add_nl = new wxCheckBox(panel, wxID_ANY, wxT("add new line"), wxDefaultPosition, wxDefaultSize);
-	checkBox_add_nl->Bind(wxEVT_CHECKBOX, &Frame_menu_settings::OnCheckBox_add_nl, this);
+	check_box_add_nl = new wxCheckBox(panel, wxID_ANY, wxT("add new line"), wxDefaultPosition, wxDefaultSize);
+	check_box_add_nl->Bind(wxEVT_CHECKBOX, &frame_menu_settings::on_check_box_add_nl, this);
 	
 	// Check box add carry return
-	checkBox_add_cr = new wxCheckBox(panel, wxID_ANY, wxT("add carry return"), wxDefaultPosition, wxDefaultSize);
-	checkBox_add_cr->Bind(wxEVT_CHECKBOX, &Frame_menu_settings::OnCheckBox_add_cr, this);
+	check_box_add_cr = new wxCheckBox(panel, wxID_ANY, wxT("add carry return"), wxDefaultPosition, wxDefaultSize);
+	check_box_add_cr->Bind(wxEVT_CHECKBOX, &frame_menu_settings::on_check_box_add_cr, this);
 	
 	
 	// Botón default
 	button_default = new wxButton(panel, wxID_ANY, wxT("Default"), wxDefaultPosition, wxDefaultSize);
-	button_default->Bind(wxEVT_BUTTON, &Frame_menu_settings::OnClick_default, this);
+	button_default->Bind(wxEVT_BUTTON, &frame_menu_settings::on_click_default, this);
 	
 	// Botón guardar
 	button_save = new wxButton(panel, wxID_ANY, wxT("Save"), wxDefaultPosition, wxDefaultSize);
-	button_save->Bind(wxEVT_BUTTON, &Frame_menu_settings::OnClick_save, this);
+	button_save->Bind(wxEVT_BUTTON, &frame_menu_settings::on_click_save, this);
 	
 	
 	// Creación del layout de la interfaz gráfica
 	///////////////////////////////////////////////////////////////////
 	// Sizers
-	wxBoxSizer *vBoxSizer_main = new wxBoxSizer(wxVERTICAL);			// Sizer vertical principal.
-	wxFlexGridSizer *flexGridSizer = new wxFlexGridSizer(2, 10, 10);	// Para textos y combo box.
-	wxBoxSizer *hBoxSizer_buttons = new wxBoxSizer(wxHORIZONTAL);		// Sizer horizontal para botones.
+	wxBoxSizer *v_box_sizer_main = new wxBoxSizer(wxVERTICAL);			// Sizer vertical principal.
+	wxFlexGridSizer *flex_grid_sizer = new wxFlexGridSizer(2, 10, 10);	// Para textos y combo box.
+	wxBoxSizer *h_box_sizer_buttons = new wxBoxSizer(wxHORIZONTAL);		// Sizer horizontal para botones.
 	
-	flexGridSizer->Add(staticText_dataBits, 0);
-	flexGridSizer->Add(comboBox_dataBits, 0);
-	flexGridSizer->Add(staticText_parity, 0);
-	flexGridSizer->Add(comboBox_parity, 0);
-	flexGridSizer->Add(staticText_stopBits, 0);
-	flexGridSizer->Add(comboBox_stopBits, 0);
-	vBoxSizer_main->Add(flexGridSizer, 0, wxALL, 23);
+	flex_grid_sizer->Add(static_text_data_bits, 0);
+	flex_grid_sizer->Add(combo_box_data_bits, 0);
+	flex_grid_sizer->Add(static_text_parity, 0);
+	flex_grid_sizer->Add(combo_box_parity, 0);
+	flex_grid_sizer->Add(static_text_stop_bits, 0);
+	flex_grid_sizer->Add(combo_box_stop_bits, 0);
+	v_box_sizer_main->Add(flex_grid_sizer, 0, wxALL, 23);
 	
-	vBoxSizer_main->Add(staticText_flowControl, 0, wxLEFT, 23);
-	vBoxSizer_main->AddSpacer(5);
-	vBoxSizer_main->Add(checkBox_useDtr, 0, wxLEFT, 50);
-	vBoxSizer_main->AddSpacer(5);
-	vBoxSizer_main->Add(checkBox_useRts, 0, wxLEFT, 50);
+	v_box_sizer_main->Add(static_text_flow_control, 0, wxLEFT, 23);
+	v_box_sizer_main->AddSpacer(5);
+	v_box_sizer_main->Add(check_box_use_dtr, 0, wxLEFT, 50);
+	v_box_sizer_main->AddSpacer(5);
+	v_box_sizer_main->Add(check_box_use_rts, 0, wxLEFT, 50);
 	
-	vBoxSizer_main->AddSpacer(23);
-	vBoxSizer_main->Add(staticText_add_to_message, 0, wxLEFT, 23);
-	vBoxSizer_main->AddSpacer(5);
-	vBoxSizer_main->Add(checkBox_add_nl, 0, wxLEFT, 50);
-	vBoxSizer_main->AddSpacer(5);
-	vBoxSizer_main->Add(checkBox_add_cr, 0, wxLEFT, 50);
+	v_box_sizer_main->AddSpacer(23);
+	v_box_sizer_main->Add(static_text_add_to_message, 0, wxLEFT, 23);
+	v_box_sizer_main->AddSpacer(5);
+	v_box_sizer_main->Add(check_box_add_nl, 0, wxLEFT, 50);
+	v_box_sizer_main->AddSpacer(5);
+	v_box_sizer_main->Add(check_box_add_cr, 0, wxLEFT, 50);
 	
-	vBoxSizer_main->AddSpacer(27);
-	hBoxSizer_buttons->Add(button_default, 0, wxLEFT, 13);
-	hBoxSizer_buttons->AddSpacer(56);			// 50 píxeles entre los botones.
-	hBoxSizer_buttons->Add(button_save, 0);
-	vBoxSizer_main->Add(hBoxSizer_buttons, 0);
+	v_box_sizer_main->AddSpacer(27);
+	h_box_sizer_buttons->Add(button_default, 0, wxLEFT, 13);
+	h_box_sizer_buttons->AddSpacer(56);			// 50 píxeles entre los botones.
+	h_box_sizer_buttons->Add(button_save, 0);
+	v_box_sizer_main->Add(h_box_sizer_buttons, 0);
 	
-	panel->SetSizer(vBoxSizer_main, wxEXPAND);	// Sizer vertical principal en el panel.
+	panel->SetSizer(v_box_sizer_main, wxEXPAND);	// Sizer vertical principal en el panel.
 	
 	// Actualiza GUI con valores persistentes desde el disco
 	///////////////////////////////////////////////////////////////////
-	if (persistent_data->loadData())
+	if (persistent_store->load_data())
 	{
-		dataBits = persistent_data->getInt("dataBits");
-		parity = persistent_data->getInt("parity");
-		stopBits = persistent_data->getInt("stopBits");
-		useDtr = persistent_data->getBool("useDtr");
-		useRts = persistent_data->getBool("useRts");
-		add_nl = persistent_data->getBool("add_nl");
-		add_cr = persistent_data->getBool("add_cr");
+		data_bits = persistent_store->get_int("dataBits");
+		parity = persistent_store->get_int("parity");
+		stop_bits = persistent_store->get_int("stopBits");
+		use_dtr = persistent_store->get_bool("useDtr");
+		use_rts = persistent_store->get_bool("useRts");
+		add_nl = persistent_store->get_bool("add_nl");
+		add_cr = persistent_store->get_bool("add_cr");
 	}
 	else
 	{
@@ -246,59 +246,59 @@ wxDefaultPosition, wxSize(240, 370), wxCAPTION | wxCLOSE_BOX | wxFRAME_FLOAT_ON_
 		 * archivo persistentData.dat, setea los valores por defecto e 
 		 * intenta crear el archivo.
 		 */
-		dataBits = DEFAULT_DATA_BITS;
+		data_bits = DEFAULT_DATA_BITS;
 		parity = DEFAULT_PARITY;
-		stopBits = DEFAULT_STOP_BITS;
-		useDtr = DEFAULT_USE_DTR;
-		useRts = DEFAULT_USE_RTS;
+		stop_bits = DEFAULT_STOP_BITS;
+		use_dtr = DEFAULT_USE_DTR;
+		use_rts = DEFAULT_USE_RTS;
 		add_nl = DEFAULT_ADD_NL;
 		add_cr = DEFAULT_ADD_CR;
 		
 		// Guarda valores en disco
-		persistent_data->setInt("dataBits", dataBits);
-		persistent_data->setInt("parity", parity);
-		persistent_data->setInt("stopBits", stopBits);
-		persistent_data->setBool("useDtr", useDtr);
-		persistent_data->setBool("useRts", useRts);
-		persistent_data->setBool("add_nl", add_nl);
-		persistent_data->setBool("add_cr", add_cr);
+		persistent_store->set_int("dataBits", data_bits);
+		persistent_store->set_int("parity", parity);
+		persistent_store->set_int("stopBits", stop_bits);
+		persistent_store->set_bool("useDtr", use_dtr);
+		persistent_store->set_bool("useRts", use_rts);
+		persistent_store->set_bool("add_nl", add_nl);
+		persistent_store->set_bool("add_cr", add_cr);
 	}
 	
-	setValuesOnWidgets();
+	set_values_on_widgets();
 	
 	#if DEBUG_LOG
-	cout << "\nData bits = " << dataBits << endl;
+	cout << "\nData bits = " << data_bits << endl;
 	cout << "Parity = " << parity << endl;
-	cout << "Stop bits = " << stopBits << endl;
-	cout << "Use DTR = " << useDtr << endl;
-	cout << "Use RTS = " << useRts << endl;
+	cout << "Stop bits = " << stop_bits << endl;
+	cout << "Use DTR = " << use_dtr << endl;
+	cout << "Use RTS = " << use_rts << endl;
 	cout << "Add new line = " << add_nl << endl;
 	cout << "Add carry return = " << add_cr << endl;
 	#endif
 }
 
-void Frame_menu_settings::setValuesOnWidgets(void)
+void frame_menu_settings::set_values_on_widgets(void)
 {
-	if (dataBits == 5) comboBox_dataBits->SetValue(wxT("5"));
-	else if (dataBits == 6) comboBox_dataBits->SetValue(wxT("6"));
-	else if (dataBits == 7) comboBox_dataBits->SetValue(wxT("7"));
-	else if (dataBits == 8) comboBox_dataBits->SetValue(wxT("8"));
+	if (data_bits == 5) combo_box_data_bits->SetValue(wxT("5"));
+	else if (data_bits == 6) combo_box_data_bits->SetValue(wxT("6"));
+	else if (data_bits == 7) combo_box_data_bits->SetValue(wxT("7"));
+	else if (data_bits == 8) combo_box_data_bits->SetValue(wxT("8"));
 	
-	if (parity == NOPARITY) comboBox_parity->SetValue(WXT_NO_PARITY);
-	else if (parity == EVENPARITY) comboBox_parity->SetValue(WXT_EVEN_PARITY);
-	else if (parity == ODDPARITY) comboBox_parity->SetValue(WXT_ODD_PARITY);
+	if (parity == NOPARITY) combo_box_parity->SetValue(WXT_NO_PARITY);
+	else if (parity == EVENPARITY) combo_box_parity->SetValue(WXT_EVEN_PARITY);
+	else if (parity == ODDPARITY) combo_box_parity->SetValue(WXT_ODD_PARITY);
 	
-	if (stopBits == ONESTOPBIT) comboBox_stopBits->SetValue(WXT_1_STOP_BIT);
-	else if (stopBits == ONE5STOPBITS) comboBox_stopBits->SetValue(WXT_15_STOP_BITS);
-	else if (stopBits == TWOSTOPBITS) comboBox_stopBits->SetValue(WXT_2_STOP_BITS);
+	if (stop_bits == ONESTOPBIT) combo_box_stop_bits->SetValue(WXT_1_STOP_BIT);
+	else if (stop_bits == ONE5STOPBITS) combo_box_stop_bits->SetValue(WXT_15_STOP_BITS);
+	else if (stop_bits == TWOSTOPBITS) combo_box_stop_bits->SetValue(WXT_2_STOP_BITS);
 	
-	checkBox_useDtr->SetValue(useDtr);
-	checkBox_useRts->SetValue(useRts);
-	checkBox_add_nl->SetValue(add_nl);
-	checkBox_add_cr->SetValue(add_cr);
+	check_box_use_dtr->SetValue(use_dtr);
+	check_box_use_rts->SetValue(use_rts);
+	check_box_add_nl->SetValue(add_nl);
+	check_box_add_cr->SetValue(add_cr);
 }
 
-void Frame_menu_settings::OnClose(wxCloseEvent &event)
+void frame_menu_settings::on_close(wxCloseEvent &event)
 {
 	if(event.CanVeto())
 	{
@@ -308,19 +308,19 @@ void Frame_menu_settings::OnClose(wxCloseEvent &event)
 	Destroy();
 }
 
-void Frame_menu_settings::OnComboBox_dataBits(wxCommandEvent &event)
+void frame_menu_settings::on_combo_box_data_bits(wxCommandEvent &event)
 {
-	wxString wxstr = comboBox_dataBits->GetStringSelection();
-	dataBits = wxAtoi(wxstr);	// Pasa de wxString a entero.
+	wxString wxstr = combo_box_data_bits->GetStringSelection();
+	data_bits = wxAtoi(wxstr);	// Pasa de wxString a entero.
 	
 	#if DEBUG_LOG
-	cout << "Data bits = " << dataBits << endl;
+	cout << "Data bits = " << data_bits << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnComboBox_parity(wxCommandEvent &event)
+void frame_menu_settings::on_combo_box_parity(wxCommandEvent &event)
 {
-	wxString wxstr = comboBox_parity->GetStringSelection();
+	wxString wxstr = combo_box_parity->GetStringSelection();
 	
 	if (wxstr == WXT_NO_PARITY)
 	{
@@ -340,104 +340,104 @@ void Frame_menu_settings::OnComboBox_parity(wxCommandEvent &event)
 	#endif
 }
 
-void Frame_menu_settings::OnComboBox_stopBits(wxCommandEvent &event)
+void frame_menu_settings::on_combo_box_stop_bits(wxCommandEvent &event)
 {
-	wxString wxstr = comboBox_stopBits->GetStringSelection();
+	wxString wxstr = combo_box_stop_bits->GetStringSelection();
 	
 	if (wxstr == WXT_1_STOP_BIT)
 	{
-		stopBits = ONESTOPBIT;
+		stop_bits = ONESTOPBIT;
 	}
 	else if (wxstr == WXT_15_STOP_BITS)
 	{
-		stopBits = ONE5STOPBITS;
+		stop_bits = ONE5STOPBITS;
 	}
 	else if (wxstr == WXT_2_STOP_BITS)
 	{
-		stopBits = TWOSTOPBITS;
+		stop_bits = TWOSTOPBITS;
 	}
 	
 	#if DEBUG_LOG 
-	cout << "Stop bits = " << stopBits << endl;
+	cout << "Stop bits = " << stop_bits << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnCheckBox_useDtr(wxCommandEvent &event)
+void frame_menu_settings::on_check_box_use_dtr(wxCommandEvent &event)
 {
-	useDtr = checkBox_useDtr->GetValue();
+	use_dtr = check_box_use_dtr->GetValue();
 	
 	#if DEBUG_LOG 
-	cout << "Use DTR = " << useDtr << endl;
+	cout << "Use DTR = " << use_dtr << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnCheckBox_useRts(wxCommandEvent &event)
+void frame_menu_settings::on_check_box_use_rts(wxCommandEvent &event)
 {
-	useRts = checkBox_useRts->GetValue();
+	use_rts = check_box_use_rts->GetValue();
 	
 	#if DEBUG_LOG 
-	cout << "Use RTS = " << useRts << endl;
+	cout << "Use RTS = " << use_rts << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnCheckBox_add_nl(wxCommandEvent &event)
+void frame_menu_settings::on_check_box_add_nl(wxCommandEvent &event)
 {
-	add_nl = checkBox_add_nl->GetValue();
+	add_nl = check_box_add_nl->GetValue();
 	
 	#if DEBUG_LOG 
 	cout << "Add new line = " << add_nl << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnCheckBox_add_cr(wxCommandEvent &event)
+void frame_menu_settings::on_check_box_add_cr(wxCommandEvent &event)
 {
-	add_cr = checkBox_add_cr->GetValue();
+	add_cr = check_box_add_cr->GetValue();
 	
 	#if DEBUG_LOG 
 	cout << "Add carry return = " << add_cr << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnClick_default(wxCommandEvent &event)
+void frame_menu_settings::on_click_default(wxCommandEvent &event)
 {
-	dataBits = DEFAULT_DATA_BITS;
+	data_bits = DEFAULT_DATA_BITS;
 	parity = DEFAULT_PARITY;
-	stopBits = DEFAULT_STOP_BITS;
-	useDtr = DEFAULT_USE_DTR;
-	useRts = DEFAULT_USE_RTS;
+	stop_bits = DEFAULT_STOP_BITS;
+	use_dtr = DEFAULT_USE_DTR;
+	use_rts = DEFAULT_USE_RTS;
 	
-	setValuesOnWidgets();
+	set_values_on_widgets();
 	
 	#if DEBUG_LOG
-	cout << "\nData bits = " << dataBits << endl;
+	cout << "\nData bits = " << data_bits << endl;
 	cout << "Parity = " << parity << endl;
-	cout << "Stop bits = " << stopBits << endl;
-	cout << "Use DTR = " << useDtr << endl;
-	cout << "Use RTS = " << useRts << endl;
+	cout << "Stop bits = " << stop_bits << endl;
+	cout << "Use DTR = " << use_dtr << endl;
+	cout << "Use RTS = " << use_rts << endl;
 	cout << "Add new line = " << add_nl << endl;
 	cout << "Add carry return = " << add_cr << endl;
 	#endif
 }
 
-void Frame_menu_settings::OnClick_save(wxCommandEvent &event)
+void frame_menu_settings::on_click_save(wxCommandEvent &event)
 {
 	// Guarda valores en disco
-	persistent_data->setInt("dataBits", dataBits);
-	persistent_data->setInt("parity", parity);
-	persistent_data->setInt("stopBits", stopBits);
-	persistent_data->setBool("useDtr", useDtr);
-	persistent_data->setBool("useRts", useRts);
-	persistent_data->setBool("add_nl", add_nl);
-	persistent_data->setBool("add_cr", add_cr);
+	persistent_store->set_int("dataBits", data_bits);
+	persistent_store->set_int("parity", parity);
+	persistent_store->set_int("stopBits", stop_bits);
+	persistent_store->set_bool("useDtr", use_dtr);
+	persistent_store->set_bool("useRts", use_rts);
+	persistent_store->set_bool("add_nl", add_nl);
+	persistent_store->set_bool("add_cr", add_cr);
 	
 	menu_settings_up = false;
 	
 	#if DEBUG_LOG 
-	cout << "\nData bits = " << dataBits << endl;
+	cout << "\nData bits = " << data_bits << endl;
 	cout << "Parity = " << parity << endl;
-	cout << "Stop bits = " << stopBits << endl;
-	cout << "Use DTR = " << useDtr << endl;
-	cout << "Use RTS = " << useRts << endl;
+	cout << "Stop bits = " << stop_bits << endl;
+	cout << "Use DTR = " << use_dtr << endl;
+	cout << "Use RTS = " << use_rts << endl;
 	cout << "Add new line = " << add_nl << endl;
 	cout << "Add carry return = " << add_cr << endl;
 	#endif
@@ -448,25 +448,25 @@ void Frame_menu_settings::OnClick_save(wxCommandEvent &event)
 //==================================================================
 // Clase Frame principal
 //==================================================================
-class Frame_main : public wxFrame
+class frame_main : public wxFrame
 {
 	public:
-		Frame_main(const wxString &title, const wxSize size);
+		frame_main(const wxString &title, const wxSize size);
 
 	private:
 		// Widgets
-		wxComboBox *comboBox_serialPort;
-		wxComboBox *comboBox_baudRate;
-		wxButton *button_connectDisconnect;
-		wxButton *button_clearReceived;
-		wxTextCtrl *textCtrl_received;
-		wxTextCtrl *textCtrl_send;
+		wxComboBox *combo_box_serial_port;
+		wxComboBox *combo_box_baud_rate;
+		wxButton *button_connect_disconnect;
+		wxButton *button_clear_received;
+		wxTextCtrl *text_ctrl_received;
+		wxTextCtrl *text_ctrl_send;
 		wxButton *button_send;
-		//wxTimer *timer_serialRx;
+		//wxTimer *timer_serial_rx;
 		// Menú
-		wxMenuBar *menuBar;
-		wxMenu *editMenu;
-		wxMenu *helpMenu;
+		wxMenuBar *menu_bar;
+		wxMenu *edit_menu;
+		wxMenu *help_menu;
 
 		// Variables
 		bool connected = false;
@@ -474,170 +474,170 @@ class Frame_main : public wxFrame
 		bool add_nl;
 		bool add_cr;
 		
-		wxArrayString serialPortChoices;
-		wxArrayString baudChoices;
+		wxArrayString serial_port_choices;
+		wxArrayString baud_choices;
 		
-		SerialPort *serialPort = new SerialPort();
-		Frame_menu_settings *frameMenuSettings;
+		serial_port *serial_port_driver = new serial_port();
+		frame_menu_settings *frame_menu_settings_window;
 		
 		// Variables persistentes guardadas en disco
-		//Persistent_data *persistent_data = new Persistent_data("persistent_data.dat");
-		Persistent_data persistent_data = Persistent_data("persistent_data.dat");
+		//persistent_data *persistent_store = new persistent_data("persistent_data.dat");
+		persistent_data persistent_store = persistent_data("persistent_data.dat");
 		
 		// Métodos
-		void connectDisconnect(void);
-		list<int> getAvailableComPorts(void);
-		void addSerialPortsToComboBox(list<int> comPorts);
+		void connect_disconnect(void);
+		list<int> get_available_com_ports(void);
+		void add_serial_ports_to_combo_box(list<int> com_ports);
 
 		// Event handlers
-		void OnClose(wxCloseEvent &event);
-		void OnComboBoxDropDown_serialPort(wxCommandEvent &event);
-		void OnComboBoxCloseUp_serialPort(wxCommandEvent &event);
-		void OnComboBox_baudRate(wxCommandEvent &event);
-		void OnClick_connectDisconnect(wxCommandEvent &event);
-		void OnClick_clearReceived(wxCommandEvent &event);
-		void OnClick_send(wxCommandEvent &event);
+		void on_close(wxCloseEvent &event);
+		void on_combo_box_drop_down_serial_port(wxCommandEvent &event);
+		void on_combo_box_close_up_serial_port(wxCommandEvent &event);
+		void on_combo_box_baud_rate(wxCommandEvent &event);
+		void on_click_connect_disconnect(wxCommandEvent &event);
+		void on_click_clear_received(wxCommandEvent &event);
+		void on_click_send(wxCommandEvent &event);
 		// Menú
-		void OnMenu_settings(wxCommandEvent &event);
-		void OnMenu_about(wxCommandEvent &event);
-		//void OnTimer_serialRx(wxTimerEvent &event);
+		void on_menu_settings(wxCommandEvent &event);
+		void on_menu_about(wxCommandEvent &event);
+		//void on_timer_serial_rx(wxTimerEvent &event);
 };
 
 // Constructor
-Frame_main::Frame_main(const wxString &title, const wxSize size) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, size)
+frame_main::frame_main(const wxString &title, const wxSize size) : wxFrame(NULL, wxID_ANY, title, wxDefaultPosition, size)
 {
 	CentreOnScreen();
 	//Maximize();
 
-	// Cuando se da click al botón de cerrar ventana llama al método OnClose().
-	Bind(wxEVT_CLOSE_WINDOW, &Frame_main::OnClose, this);
+	// Cuando se da click al botón de cerrar ventana llama al método on_close().
+	Bind(wxEVT_CLOSE_WINDOW, &frame_main::on_close, this);
 
 	// Barra de menú
 	//////////////////////////////////////////////////////////////////////////////
-	menuBar = new wxMenuBar();
+	menu_bar = new wxMenuBar();
 	//-------------
 	// Menú Editar
-	editMenu = new wxMenu();
+	edit_menu = new wxMenu();
 	
-	editMenu->Append(wxID_PROPERTIES, wxT("&Settings"));
-	Bind(wxEVT_MENU, &Frame_main::OnMenu_settings, this, wxID_PROPERTIES);
+	edit_menu->Append(wxID_PROPERTIES, wxT("&Settings"));
+	Bind(wxEVT_MENU, &frame_main::on_menu_settings, this, wxID_PROPERTIES);
 	
-	menuBar->Append(editMenu, wxT("&Edit"));
+	menu_bar->Append(edit_menu, wxT("&Edit"));
 	//-------------
 	// Menú Ayuda
-	helpMenu = new wxMenu();
+	help_menu = new wxMenu();
 	
-	helpMenu->Append(wxID_OPEN, wxT("&About"));
-	Bind(wxEVT_MENU, &Frame_main::OnMenu_about, this, wxID_OPEN);
+	help_menu->Append(wxID_OPEN, wxT("&About"));
+	Bind(wxEVT_MENU, &frame_main::on_menu_about, this, wxID_OPEN);
 	
-	menuBar->Append(helpMenu, wxT("&Help"));
+	menu_bar->Append(help_menu, wxT("&Help"));
 	//-------------
-	SetMenuBar(menuBar);
+	SetMenuBar(menu_bar);
 	//////////////////////////////////////////////////////////////////////////////
 
 	// Paneles
 	//////////////////////////////////////////////////////////////////////////////
 	// Panel principal del frame
-	wxPanel *panelMain = new wxPanel(this, wxID_ANY);
-	panelMain->SetBackgroundColour(WINDOWS_COLOR);
+	wxPanel *panel_main = new wxPanel(this, wxID_ANY);
+	panel_main->SetBackgroundColour(windows_color);
 	//////////////////////////////////////////////////////////////////////////////
 
 	// Fuentes
 	// Ver documentación de clase "wxFontInfo" para ver las distintas opciones de fuentes:
 	// https://docs.wxwidgets.org/trunk/classwx_font_info.html#a74ff2d0449e75bcafc1dd4695f97ab66)
 	//////////////////////////////////////////////////////////////////////////////	
-	wxFont font_receivedText(wxFontInfo(11).FaceName("Courier New").Light().AntiAliased(true));	// Fuente para los text control
+	wxFont font_received_text(wxFontInfo(11).FaceName("Courier New").Light().AntiAliased(true));	// Fuente para los text control
 	//////////////////////////////////////////////////////////////////////////////
 
 	// Inicializa los widgets
 	//////////////////////////////////////////////////////////////////////////////
 	// Texto comboBox puerto serial
-	wxStaticText *staticText_serialPort = new wxStaticText(panelMain, wxID_ANY, wxT("Serial port:"));
-	//staticText_serialPort->SetFont(fontTitle);
+	wxStaticText *static_text_serial_port = new wxStaticText(panel_main, wxID_ANY, wxT("Serial port:"));
+	//static_text_serial_port->SetFont(fontTitle);
 
 	// comboBox puerto serial
-	comboBox_serialPort = new wxComboBox(panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition,
-									  wxSize(70, -1), serialPortChoices, wxCB_READONLY);
-	//comboBox_serialPort->SetFont(fontCommon);
-	comboBox_serialPort->Bind(wxEVT_COMBOBOX_DROPDOWN, &Frame_main::OnComboBoxDropDown_serialPort, this); // Evento generado cuando el combo box se despliega.
-	comboBox_serialPort->Bind(wxEVT_COMBOBOX_CLOSEUP, &Frame_main::OnComboBoxCloseUp_serialPort, this);   // Evento generado cuando el combo box se cierra.
+	combo_box_serial_port = new wxComboBox(panel_main, wxID_ANY, wxEmptyString, wxDefaultPosition,
+									  wxSize(70, -1), serial_port_choices, wxCB_READONLY);
+	//combo_box_serial_port->SetFont(fontCommon);
+	combo_box_serial_port->Bind(wxEVT_COMBOBOX_DROPDOWN, &frame_main::on_combo_box_drop_down_serial_port, this); // Evento generado cuando el combo box se despliega.
+	combo_box_serial_port->Bind(wxEVT_COMBOBOX_CLOSEUP, &frame_main::on_combo_box_close_up_serial_port, this);   // Evento generado cuando el combo box se cierra.
 
 	// Texto comboBox baud rate
-	wxStaticText *staticText_baudRate = new wxStaticText(panelMain, wxID_ANY, wxT("Baud:"));
-	//staticText_baudRate->SetFont(fontTitle);
+	wxStaticText *static_text_baud_rate = new wxStaticText(panel_main, wxID_ANY, wxT("Baud:"));
+	//static_text_baud_rate->SetFont(fontTitle);
 
 	// comboBox baud rate
-	baudChoices.Add(wxT("110"));
-	baudChoices.Add(wxT("300"));
-	baudChoices.Add(wxT("600"));
-	baudChoices.Add(wxT("1200"));
-	baudChoices.Add(wxT("2400"));
-	baudChoices.Add(wxT("4800"));
-	baudChoices.Add(wxT("9600"));
-	baudChoices.Add(wxT("14400"));
-	baudChoices.Add(wxT("19200"));
-	baudChoices.Add(wxT("38400"));
-	baudChoices.Add(wxT("57600"));
-	baudChoices.Add(wxT("115200"));
-	baudChoices.Add(wxT("128000"));
-	baudChoices.Add(wxT("256000"));
-	comboBox_baudRate = new wxComboBox(panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition,
-									   wxSize(70, -1), baudChoices, wxCB_READONLY);
-	//comboBox_baudRate->SetFont(fontCommon);
-	comboBox_baudRate->Bind(wxEVT_COMBOBOX, &Frame_main::OnComboBox_baudRate, this);
+	baud_choices.Add(wxT("110"));
+	baud_choices.Add(wxT("300"));
+	baud_choices.Add(wxT("600"));
+	baud_choices.Add(wxT("1200"));
+	baud_choices.Add(wxT("2400"));
+	baud_choices.Add(wxT("4800"));
+	baud_choices.Add(wxT("9600"));
+	baud_choices.Add(wxT("14400"));
+	baud_choices.Add(wxT("19200"));
+	baud_choices.Add(wxT("38400"));
+	baud_choices.Add(wxT("57600"));
+	baud_choices.Add(wxT("115200"));
+	baud_choices.Add(wxT("128000"));
+	baud_choices.Add(wxT("256000"));
+	combo_box_baud_rate = new wxComboBox(panel_main, wxID_ANY, wxEmptyString, wxDefaultPosition,
+									   wxSize(70, -1), baud_choices, wxCB_READONLY);
+	//combo_box_baud_rate->SetFont(fontCommon);
+	combo_box_baud_rate->Bind(wxEVT_COMBOBOX, &frame_main::on_combo_box_baud_rate, this);
 
 	// Botón conectar/desconectar
-	button_connectDisconnect = new wxButton(panelMain, wxID_ANY, wxT("Connect"), wxDefaultPosition, wxDefaultSize);	// wxSize(90, 25)
-	//button_connectDisconnect->SetFont(fontButton);
-	button_connectDisconnect->Bind(wxEVT_BUTTON, &Frame_main::OnClick_connectDisconnect, this);
+	button_connect_disconnect = new wxButton(panel_main, wxID_ANY, wxT("Connect"), wxDefaultPosition, wxDefaultSize);	// wxSize(90, 25)
+	//button_connect_disconnect->SetFont(fontButton);
+	button_connect_disconnect->Bind(wxEVT_BUTTON, &frame_main::on_click_connect_disconnect, this);
 	
 	// Botón borrar mensajes recibidos
-	button_clearReceived = new wxButton(panelMain, wxID_ANY, wxT("Clear"), wxDefaultPosition, wxDefaultSize);	// wxSize(70, 25)
-	//button_clearReceived->SetFont(fontButton);
-	button_clearReceived->Bind(wxEVT_BUTTON, &Frame_main::OnClick_clearReceived, this);
+	button_clear_received = new wxButton(panel_main, wxID_ANY, wxT("Clear"), wxDefaultPosition, wxDefaultSize);	// wxSize(70, 25)
+	//button_clear_received->SetFont(fontButton);
+	button_clear_received->Bind(wxEVT_BUTTON, &frame_main::on_click_clear_received, this);
 
 	// Text control mensajes recibidos
-	textCtrl_received = new wxTextCtrl(panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
-	textCtrl_received->SetFont(font_receivedText);
+	text_ctrl_received = new wxTextCtrl(panel_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+	text_ctrl_received->SetFont(font_received_text);
 
 	// Text control mensaje enviado
-	textCtrl_send = new wxTextCtrl(panelMain, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
-	textCtrl_send->SetFont(font_receivedText);
+	text_ctrl_send = new wxTextCtrl(panel_main, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
+	text_ctrl_send->SetFont(font_received_text);
 
 	// Botón enviar
-	button_send = new wxButton(panelMain, wxID_ANY, wxT("Send"), wxDefaultPosition, wxDefaultSize);	// wxSize(70, 25)
+	button_send = new wxButton(panel_main, wxID_ANY, wxT("Send"), wxDefaultPosition, wxDefaultSize);	// wxSize(70, 25)
 	//button_send->SetFont(fontButton);
-	button_send->Bind(wxEVT_BUTTON, &Frame_main::OnClick_send, this);
+	button_send->Bind(wxEVT_BUTTON, &frame_main::on_click_send, this);
 	//////////////////////////////////////////////////////////////////////////////
 
 	// Creación del layout de la interfaz gráfica
 	//////////////////////////////////////////////////////////////////////////////
 	// Sizers
-	wxBoxSizer *vboxMain = new wxBoxSizer(wxVERTICAL);													// Sizer vertical principal
-	//wxStaticBoxSizer *hboxTop = new wxStaticBoxSizer(wxHORIZONTAL, panelMain, wxString("Settings"));	// Sizer horizontal superior
-	wxBoxSizer *hboxTop = new wxBoxSizer(wxHORIZONTAL);													// Sizer horizontal superior
-	wxBoxSizer *hboxBottom = new wxBoxSizer(wxHORIZONTAL);												// Sizer horizontal inferior
+	wxBoxSizer *v_box_main = new wxBoxSizer(wxVERTICAL);													// Sizer vertical principal
+	//wxStaticBoxSizer *h_box_top = new wxStaticBoxSizer(wxHORIZONTAL, panel_main, wxString("Settings"));	// Sizer horizontal superior
+	wxBoxSizer *h_box_top = new wxBoxSizer(wxHORIZONTAL);													// Sizer horizontal superior
+	wxBoxSizer *h_box_bottom = new wxBoxSizer(wxHORIZONTAL);												// Sizer horizontal inferior
 
-	vboxMain->AddSpacer(7);	// 7 píxeles de margen entre el menú y los widgets.
+	v_box_main->AddSpacer(7);	// 7 píxeles de margen entre el menú y los widgets.
 
 	// Agrega los widgets del sizer vertical superior.
 	// --------------
-	hboxTop->Add(staticText_serialPort, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
-	hboxTop->AddSpacer(4);										// 4 píxeles de espacio entre el texto y el combo box.
-	hboxTop->Add(comboBox_serialPort, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
-	hboxTop->AddSpacer(20);										// 20 píxeles de espacio entre el combo box y el texto de baud rate.
+	h_box_top->Add(static_text_serial_port, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
+	h_box_top->AddSpacer(4);										// 4 píxeles de espacio entre el texto y el combo box.
+	h_box_top->Add(combo_box_serial_port, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
+	h_box_top->AddSpacer(20);										// 20 píxeles de espacio entre el combo box y el texto de baud rate.
 	
-	hboxTop->Add(staticText_baudRate, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
-	hboxTop->AddSpacer(4);										// 4 píxeles de espacio entre el texto y el combo box.
-	hboxTop->Add(comboBox_baudRate, 0, wxALIGN_CENTRE);			// Centra el widget verticalmente.
-	hboxTop->AddSpacer(20);										// 20 píxeles de espacio entre el combo box y el botón de conectar.
+	h_box_top->Add(static_text_baud_rate, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
+	h_box_top->AddSpacer(4);										// 4 píxeles de espacio entre el texto y el combo box.
+	h_box_top->Add(combo_box_baud_rate, 0, wxALIGN_CENTRE);			// Centra el widget verticalmente.
+	h_box_top->AddSpacer(20);										// 20 píxeles de espacio entre el combo box y el botón de conectar.
 	
-	hboxTop->Add(button_connectDisconnect, 0, wxALIGN_CENTRE);	// Centra el widget verticalmente.
+	h_box_top->Add(button_connect_disconnect, 0, wxALIGN_CENTRE);	// Centra el widget verticalmente.
 	
-	hboxTop->AddSpacer(90);										// 90 píxeles de espacio entre el botón de conectar y el botón de borrar.
-	hboxTop->Add(button_clearReceived, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
+	h_box_top->AddSpacer(90);										// 90 píxeles de espacio entre el botón de conectar y el botón de borrar.
+	h_box_top->Add(button_clear_received, 0, wxALIGN_CENTRE);		// Centra el widget verticalmente.
 	// --------------
-	vboxMain->Add(hboxTop, 0, wxALL, 4);	// Agrega el sizer horizontal superior dentro del sizer vertical principal con 4 píxeles de margen en todos lados.
+	v_box_main->Add(h_box_top, 0, wxALL, 4);	// Agrega el sizer horizontal superior dentro del sizer vertical principal con 4 píxeles de margen en todos lados.
 
 	// Texto de mensajes recibidos
 	// --------------
@@ -646,7 +646,7 @@ Frame_main::Frame_main(const wxString &title, const wxSize size) : wxFrame(NULL,
 	 * indica que se expandirá por todo el espacio disponible en la ventana. 
 	 * Tendrá 4 píxeles de margen en todos los lados,
 	 */
-	vboxMain->Add(textCtrl_received, 1, wxEXPAND | wxALL, 4);
+	v_box_main->Add(text_ctrl_received, 1, wxEXPAND | wxALL, 4);
 	// --------------
 	
 	// Agrega los widgets del sizer vertical inferior.
@@ -656,33 +656,33 @@ Frame_main::Frame_main(const wxString &title, const wxSize size) : wxFrame(NULL,
 	 * espacio disponible en la ventana. 
 	 * Estará centrado verticalmente.
 	 */
-	hboxBottom->Add(textCtrl_send, 1, wxALIGN_CENTRE);
-	hboxBottom->AddSpacer(5);
-	hboxBottom->Add(button_send, 0, wxALIGN_CENTRE);	// Centrado verticalmente.
+	h_box_bottom->Add(text_ctrl_send, 1, wxALIGN_CENTRE);
+	h_box_bottom->AddSpacer(5);
+	h_box_bottom->Add(button_send, 0, wxALIGN_CENTRE);	// Centrado verticalmente.
 	// --------------
-	vboxMain->Add(hboxBottom, 0, wxEXPAND | wxALL, 4);	// Agrega el sizer horizontal inferior dentro del sizer vertical principal.
-	vboxMain->AddSpacer(2);
+	v_box_main->Add(h_box_bottom, 0, wxEXPAND | wxALL, 4);	// Agrega el sizer horizontal inferior dentro del sizer vertical principal.
+	v_box_main->AddSpacer(2);
 	
-	panelMain->SetSizer(vboxMain, wxEXPAND);	// Sizer vertical principal en el panel principal.
+	panel_main->SetSizer(v_box_main, wxEXPAND);	// Sizer vertical principal en el panel principal.
 	//////////////////////////////////////////////////////////////////////////////
 	
 	// Timer para actualizar textCtrl de mensajes recibidos
-	//timer_serialRx = new wxTimer(this, wxID_ANY);
-	//timer_serialRx = new wxTimer(this);
-	//timer_serialRx->Bind(wxEVT_TIMER, &Frame_main::OnTimer_serialRx, this);	// Evento generado cuando vence el Timer.
-	//timer_serialRx->Bind(wxEVT_TIMER, &Frame_main::OnTimer_serialRx, this, timer_serialRx->GetId());
+	//timer_serial_rx = new wxTimer(this, wxID_ANY);
+	//timer_serial_rx = new wxTimer(this);
+	//timer_serial_rx->Bind(wxEVT_TIMER, &frame_main::on_timer_serial_rx, this);	// Evento generado cuando vence el Timer.
+	//timer_serial_rx->Bind(wxEVT_TIMER, &frame_main::on_timer_serial_rx, this, timer_serial_rx->GetId());
 		
 	// Actualiza GUI con las variables persistentes desde el disco.
 	//////////////////////////////////////////////////////////////////////////////
-	string selected_serialPort;
-	int32_t baudRate;
+	string selected_serial_port;
+	int32_t baud_rate;
 		
-	if (persistent_data.loadData())	// Si existe el archivo
+	if (persistent_store.load_data())	// Si existe el archivo
 	{
-		selected_serialPort = persistent_data.getString("selected_serialPort");
-		baudRate = persistent_data.getInt("baudRate");
-		add_nl = persistent_data.getBool("add_nl");
-		add_cr = persistent_data.getBool("add_cr");
+		selected_serial_port = persistent_store.get_string("selected_serialPort");
+		baud_rate = persistent_store.get_int("baudRate");
+		add_nl = persistent_store.get_bool("add_nl");
+		add_cr = persistent_store.get_bool("add_cr");
 	}
 	else
 	{
@@ -691,113 +691,113 @@ Frame_main::Frame_main(const wxString &title, const wxSize size) : wxFrame(NULL,
 		 * archivo persistentData.dat, setea los valores por defecto e 
 		 * intenta crear el archivo.
 		 */
-		selected_serialPort = "";
-		baudRate = DEFAULT_BAUD_RATE;
+		selected_serial_port = "";
+		baud_rate = DEFAULT_BAUD_RATE;
 		add_nl = DEFAULT_ADD_NL;
 		add_cr = DEFAULT_ADD_CR;
 		
 		// Guarda valores en disco
-		persistent_data.setString("selected_serialPort", selected_serialPort);
-		persistent_data.setInt("baudRate", DEFAULT_BAUD_RATE);
-		persistent_data.setInt("dataBits", DEFAULT_DATA_BITS);
-		persistent_data.setInt("parity", DEFAULT_PARITY);
-		persistent_data.setInt("stopBits", DEFAULT_STOP_BITS);
-		persistent_data.setBool("useDtr", DEFAULT_USE_DTR);
-		persistent_data.setBool("useRts", DEFAULT_USE_RTS);
-		persistent_data.setBool("add_nl", DEFAULT_ADD_NL);
-		persistent_data.setBool("add_cr", DEFAULT_ADD_CR);
+		persistent_store.set_string("selected_serialPort", selected_serial_port);
+		persistent_store.set_int("baudRate", DEFAULT_BAUD_RATE);
+		persistent_store.set_int("dataBits", DEFAULT_DATA_BITS);
+		persistent_store.set_int("parity", DEFAULT_PARITY);
+		persistent_store.set_int("stopBits", DEFAULT_STOP_BITS);
+		persistent_store.set_bool("useDtr", DEFAULT_USE_DTR);
+		persistent_store.set_bool("useRts", DEFAULT_USE_RTS);
+		persistent_store.set_bool("add_nl", DEFAULT_ADD_NL);
+		persistent_store.set_bool("add_cr", DEFAULT_ADD_CR);
 	}
 	
 	#if DEBUG_LOG	
-	cout << "\nserial port = " << persistent_data.getString("selected_serialPort") << endl;
-	cout << "baud rate = " << persistent_data.getInt("baudRate") << " baudios\n";
-	cout << "Data bits = " << persistent_data.getInt("dataBits") << endl;
-	cout << "Parity = " << persistent_data.getInt("parity") << endl;
-	cout << "Stop bits = " << persistent_data.getInt("stopBits") << endl;
-	cout << "Use DTR = " << persistent_data.getBool("useDtr") << endl;
-	cout << "Use RTS = " << persistent_data.getBool("useRts") << endl;
-	cout << "Add new line = " << persistent_data.getBool("add_nl") << endl;
-	cout << "Add carry return = " << persistent_data.getBool("add_cr") << endl;
+	cout << "\nserial port = " << persistent_store.get_string("selected_serialPort") << endl;
+	cout << "baud rate = " << persistent_store.get_int("baudRate") << " baudios\n";
+	cout << "Data bits = " << persistent_store.get_int("dataBits") << endl;
+	cout << "Parity = " << persistent_store.get_int("parity") << endl;
+	cout << "Stop bits = " << persistent_store.get_int("stopBits") << endl;
+	cout << "Use DTR = " << persistent_store.get_bool("useDtr") << endl;
+	cout << "Use RTS = " << persistent_store.get_bool("useRts") << endl;
+	cout << "Add new line = " << persistent_store.get_bool("add_nl") << endl;
+	cout << "Add carry return = " << persistent_store.get_bool("add_cr") << endl;
 	#endif
 
-	list<int> comPorts = getAvailableComPorts();	// Devuelve una lista de enteros con los números de los puertos COM disponibles
-	if (!comPorts.empty())
+	list<int> com_ports = get_available_com_ports();	// Devuelve una lista de enteros con los números de los puertos COM disponibles
+	if (!com_ports.empty())
 	{
-		addSerialPortsToComboBox(comPorts);			// Agrega los puertos seriales disponibles en el combobox
+		add_serial_ports_to_combo_box(com_ports);			// Agrega los puertos seriales disponibles en el combobox
 	}
 	
 	wxString str;
-	str << selected_serialPort;
-	comboBox_serialPort->SetValue(str);
+	str << selected_serial_port;
+	combo_box_serial_port->SetValue(str);
 	
 	str.clear();
-	str << baudRate;
-	comboBox_baudRate->SetValue(str);
+	str << baud_rate;
+	combo_box_baud_rate->SetValue(str);
 	//////////////////////////////////////////////////////////////////////////////
 	
 	// Setea el text control donde desplegará los mensajes recibidos.
-	serialPort->setTextControl(textCtrl_received);
+	serial_port_driver->set_text_control(text_ctrl_received);
 }
 
-/*void Frame_main::OnTimer_serialRx(wxTimerEvent &event)
+/*void frame_main::on_timer_serial_rx(wxTimerEvent &event)
 {
-	textCtrl_received->AppendText(serialPort->pollSerialPort());
-	textCtrl_received->AppendText("\n");
+	text_ctrl_received->AppendText(serial_port_driver->poll_serial_port());
+	text_ctrl_received->AppendText("\n");
 	cout << "Hola mundo!\n";
 }*/
 
-void Frame_main::OnClose(wxCloseEvent &event)
+void frame_main::on_close(wxCloseEvent &event)
 {
 	if(event.CanVeto())
 	{
-		if (connected) connectDisconnect();	// Si está conectado, desconecta el puerto utilizado
+		if (connected) connect_disconnect();	// Si está conectado, desconecta el puerto utilizado
 	}
 
 	Destroy();
 }
 
-void Frame_main::OnMenu_settings(wxCommandEvent &event)
+void frame_main::on_menu_settings(wxCommandEvent &event)
 {
 	if (!menu_settings_up)
 	{
-		if (connected) connectDisconnect();	// Si está conectado, desconecta el puerto utilizado
+		if (connected) connect_disconnect();	// Si está conectado, desconecta el puerto utilizado
 		
 		menu_settings_up = true;
 		
-		frameMenuSettings = new Frame_menu_settings(this);
-		frameMenuSettings->Show(true);
+		frame_menu_settings_window = new frame_menu_settings(this);
+		frame_menu_settings_window->Show(true);
 	}
 }
 
-void Frame_main::OnMenu_about(wxCommandEvent &event)
+void frame_main::on_menu_about(wxCommandEvent &event)
 {
 	// Muestra un diálogo con información de contacto
 	
-	wxString aboutText;
-	aboutText += wxT("      ") + WINDOW_TITLE + wxT("\n\n");
-	aboutText += wxT("      Version: ") + SOFTWARE_VERSION + wxT("\n\n");
-	aboutText += wxT("      Author: Juan Hauara\n\n");
-	aboutText += wxT("      Email: ") + EMAIL_CONTACT + wxT("\n\n");
-	if (!WEB_CONTACT.IsEmpty())
+	wxString about_text;
+	about_text += wxT("      ") + window_title + wxT("\n\n");
+	about_text += wxT("      Version: ") + software_version + wxT("\n\n");
+	about_text += wxT("      Author: Juan Hauara\n\n");
+	about_text += wxT("      Email: ") + email_contact + wxT("\n\n");
+	if (!web_contact.IsEmpty())
 	{
-		aboutText += wxT("      Web: ") + WEB_CONTACT + wxT("\n\n");
+		about_text += wxT("      Web: ") + web_contact + wxT("\n\n");
 	}
 	
-	wxMessageDialog *dialog = new wxMessageDialog(NULL, aboutText, wxT("About"), wxOK | wxICON_INFORMATION);
+	wxMessageDialog *dialog = new wxMessageDialog(NULL, about_text, wxT("About"), wxOK | wxICON_INFORMATION);
 	dialog->ShowModal();
 }
 
-void Frame_main::connectDisconnect(void)
+void frame_main::connect_disconnect(void)
 {
 	if (connected)
 	{
-		//timer_serialRx->Stop();
-		serialPort->stopSerialRx();
+		//timer_serial_rx->Stop();
+		serial_port_driver->stop_serial_rx();
 		
-		if (serialPort->disconnect())
+		if (serial_port_driver->disconnect())
 		{
 			connected = false;
-			button_connectDisconnect->SetLabel(wxT("Connect"));
+			button_connect_disconnect->SetLabel(wxT("Connect"));
 			
 			#if DEBUG_LOG 
 			cout << "disconnected" << endl;
@@ -813,32 +813,32 @@ void Frame_main::connectDisconnect(void)
 		 */
 		
 		// Actualiza variables persistentes desde el disco
-		persistent_data.loadData();
+		persistent_store.load_data();
 		// Setea los parámetros
-		serialPort->setSerialPort(persistent_data.getString("selected_serialPort"));
-		serialPort->setBaudRate(persistent_data.getInt("baudRate"));
-		serialPort->setDataBits(persistent_data.getInt("dataBits"));
-		serialPort->setParity(persistent_data.getInt("parity"));
-		serialPort->setStopBits(persistent_data.getInt("stopBits"));
-		serialPort->useDtr(persistent_data.getBool("useDtr"));
-		serialPort->useRts(persistent_data.getBool("useRts"));
+		serial_port_driver->set_serial_port(persistent_store.get_string("selected_serialPort"));
+		serial_port_driver->set_baud_rate(persistent_store.get_int("baudRate"));
+		serial_port_driver->set_data_bits(persistent_store.get_int("dataBits"));
+		serial_port_driver->set_parity(persistent_store.get_int("parity"));
+		serial_port_driver->set_stop_bits(persistent_store.get_int("stopBits"));
+		serial_port_driver->use_dtr(persistent_store.get_bool("useDtr"));
+		serial_port_driver->use_rts(persistent_store.get_bool("useRts"));
 		
-		add_nl = persistent_data.getBool("add_nl");
-		add_cr = persistent_data.getBool("add_cr");
+		add_nl = persistent_store.get_bool("add_nl");
+		add_cr = persistent_store.get_bool("add_cr");
 		
 		#if DEBUG_LOG
-		cout << "\nserial port = " << persistent_data.getString("selected_serialPort") << endl;
-		cout << "baud rate = " << persistent_data.getInt("baudRate") << " baudios\n";
-		cout << "Data bits = " << persistent_data.getInt("dataBits") << endl;
-		cout << "Parity = " << persistent_data.getInt("parity") << endl;
-		cout << "Stop bits = " << persistent_data.getInt("stopBits") << endl;
-		cout << "Use DTR = " << persistent_data.getBool("useDtr") << endl;
-		cout << "Use RTS = " << persistent_data.getBool("useRts") << endl;
-		cout << "Add new line = " << persistent_data.getBool("add_nl") << endl;
-		cout << "Add carry return = " << persistent_data.getBool("add_cr") << endl;
+		cout << "\nserial port = " << persistent_store.get_string("selected_serialPort") << endl;
+		cout << "baud rate = " << persistent_store.get_int("baudRate") << " baudios\n";
+		cout << "Data bits = " << persistent_store.get_int("dataBits") << endl;
+		cout << "Parity = " << persistent_store.get_int("parity") << endl;
+		cout << "Stop bits = " << persistent_store.get_int("stopBits") << endl;
+		cout << "Use DTR = " << persistent_store.get_bool("useDtr") << endl;
+		cout << "Use RTS = " << persistent_store.get_bool("useRts") << endl;
+		cout << "Add new line = " << persistent_store.get_bool("add_nl") << endl;
+		cout << "Add carry return = " << persistent_store.get_bool("add_cr") << endl;
 		#endif
 		
-		if (serialPort->getSerialPort() == "")
+		if (serial_port_driver->get_serial_port() == "")
 		{
 			// Muestra diálogo avisando que no ha seleccionado un puerto serial.
 			wxMessageDialog *dialog = new wxMessageDialog(NULL, wxT("No serial port selected."), wxT(""), wxOK | wxICON_EXCLAMATION);
@@ -847,64 +847,64 @@ void Frame_main::connectDisconnect(void)
 			return;
 		}
 		
-		if (serialPort->connect())
+		if (serial_port_driver->connect())
 		{
 			connected = true;
-			button_connectDisconnect->SetLabel(wxT("Disconnect"));
+			button_connect_disconnect->SetLabel(wxT("Disconnect"));
 
 			#if DEBUG_LOG 
 			cout << "connected" << endl;
 			#endif
 			
-			//timer_serialRx->Start(10, wxTIMER_CONTINUOUS);	// Comienza a recibir Bytes desde el puerto serie.
-			serialPort->startSerialRx();	// Comienza a recibir Bytes desde el puerto serie.
+			//timer_serial_rx->Start(10, wxTIMER_CONTINUOUS);	// Comienza a recibir Bytes desde el puerto serie.
+			serial_port_driver->start_serial_rx();	// Comienza a recibir Bytes desde el puerto serie.
 		}
 		else
 		{
 			// Muestra diálogo avisando que hubo error al intentar conectar.
-			string error = serialPort->getLastError();
-			wxString _error(error);
+			string error = serial_port_driver->get_last_error();
+			wxString error_text(error);
 			
-			wxMessageDialog *dialog = new wxMessageDialog(NULL, _error, wxT("Could not connect"), wxOK | wxICON_EXCLAMATION);
+			wxMessageDialog *dialog = new wxMessageDialog(NULL, error_text, wxT("Could not connect"), wxOK | wxICON_EXCLAMATION);
 			dialog->ShowModal();
 		}
 	}
 }
 
-list<int> Frame_main::getAvailableComPorts(void)
+list<int> frame_main::get_available_com_ports(void)
 {
 	/*
 	 * Devuelve una lista de enteros con los números de los puertos COM disponibles.
 	 */
 	 
-    wchar_t comPortPath[5000]; // buffer to store the path of the COM PORTS
-    list<int> portList;
+    wchar_t com_port_path[5000]; // buffer to store the path of the COM PORTS
+    list<int> port_list;
 
     for (uint8_t i = 0; i < 255; i++) // checking ports from COM0 to COM255
     {
         wstring str = L"COM" + to_wstring(i); // converting to COM0, COM1, COM2
-        DWORD res = QueryDosDevice(str.c_str(), comPortPath, 5000);
+        DWORD res = QueryDosDevice(str.c_str(), com_port_path, 5000);
 
         // Test the return value and error if any
         if (res != 0) //QueryDosDevice returns zero if it didn't find an object
         {
-            portList.push_back(i);
+            port_list.push_back(i);
             
             /*#if DEBUG_LOG 
-            cout << str << ": " << comPortPath << endl;
+            cout << str << ": " << com_port_path << endl;
             #endif*/
         }
     }
     
-    return portList;
+    return port_list;
 }
 
-void Frame_main::addSerialPortsToComboBox(list<int> comPorts)
+void frame_main::add_serial_ports_to_combo_box(list<int> com_ports)
 {
 	// Agrega los puertos COM disponibles al combobox
 	
 	list<int>::iterator it;
-	for (it = comPorts.begin(); it != comPorts.end(); ++it)
+	for (it = com_ports.begin(); it != com_ports.end(); ++it)
 	{
 		wxString port = wxString("COM");
 		port << *it;	// Agrega el número a COM
@@ -913,21 +913,21 @@ void Frame_main::addSerialPortsToComboBox(list<int> comPorts)
 		cout << port << endl;
 		#endif
 		
-		comboBox_serialPort->Append(port);	// Método heredado de la clase wxItemContainer
+		combo_box_serial_port->Append(port);	// Método heredado de la clase wxItemContainer
 	}
 }
 
-void Frame_main::OnComboBoxDropDown_serialPort(wxCommandEvent &event)  // Evento generado cuando el combo box se despliega.
+void frame_main::on_combo_box_drop_down_serial_port(wxCommandEvent &event)  // Evento generado cuando el combo box se despliega.
 {	
-	if (connected) connectDisconnect();	// Si está conectado, desconecta el puerto serie
+	if (connected) connect_disconnect();	// Si está conectado, desconecta el puerto serie
 	
-	comboBox_serialPort->Clear();	// Borra el contenido del combobox. Método heredado de la clase wxItemContainer
+	combo_box_serial_port->Clear();	// Borra el contenido del combobox. Método heredado de la clase wxItemContainer
 	
-	list<int> comPorts = getAvailableComPorts();	// Devuelve una lista de enteros con los números de los puertos COM disponibles
+	list<int> com_ports = get_available_com_ports();	// Devuelve una lista de enteros con los números de los puertos COM disponibles
 	
-	if (!comPorts.empty())
+	if (!com_ports.empty())
 	{
-		addSerialPortsToComboBox(comPorts);	// Agrega los puertos seriales disponibles en el combobox
+		add_serial_ports_to_combo_box(com_ports);	// Agrega los puertos seriales disponibles en el combobox
 	}
 	else
 	{
@@ -937,44 +937,44 @@ void Frame_main::OnComboBoxDropDown_serialPort(wxCommandEvent &event)  // Evento
 	}
 }
 
-void Frame_main::OnComboBoxCloseUp_serialPort(wxCommandEvent &event)  // Evento generado cuando el combo box se cierra.
+void frame_main::on_combo_box_close_up_serial_port(wxCommandEvent &event)  // Evento generado cuando el combo box se cierra.
 {	
-	wxString port = comboBox_serialPort->GetStringSelection();	// Lee el puerto serial seleccionado
-	persistent_data.setString("selected_serialPort", port.ToStdString());			// Guarda el valor en una variable persistente del mismo nombre
+	wxString port = combo_box_serial_port->GetStringSelection();	// Lee el puerto serial seleccionado
+	persistent_store.set_string("selected_serialPort", port.ToStdString());			// Guarda el valor en una variable persistente del mismo nombre
 	
 	#if DEBUG_LOG 
-	cout << "selected_serialPort = " << port.ToStdString() << endl;
+	cout << "selected_serial_port = " << port.ToStdString() << endl;
 	#endif
 }
 
-void Frame_main::OnComboBox_baudRate(wxCommandEvent &event)
+void frame_main::on_combo_box_baud_rate(wxCommandEvent &event)
 {	
-	if (connected) connectDisconnect();							// Si está conectado, desconecta el puerto serie
+	if (connected) connect_disconnect();							// Si está conectado, desconecta el puerto serie
 	
-	wxString baud = comboBox_baudRate->GetStringSelection();	// Lee el baud rate seleccionado
-	int32_t _baud = wxAtoi(baud);								// Pasa de wxString a entero
-	persistent_data.setInt("baudRate", _baud);							// Guarda el valor en una variable persistente del mismo nombre
+	wxString baud = combo_box_baud_rate->GetStringSelection();	// Lee el baud rate seleccionado
+	int32_t baud_rate_value = wxAtoi(baud);								// Pasa de wxString a entero
+	persistent_store.set_int("baudRate", baud_rate_value);							// Guarda el valor en una variable persistente del mismo nombre
 	
 	#if DEBUG_LOG 
-	cout << "baudRate = " << _baud << endl;
+	cout << "baud_rate = " << baud_rate_value << endl;
 	#endif
 }
 
-void Frame_main::OnClick_connectDisconnect(wxCommandEvent &event)
+void frame_main::on_click_connect_disconnect(wxCommandEvent &event)
 {
-	connectDisconnect();
+	connect_disconnect();
 }
 
-void Frame_main::OnClick_clearReceived(wxCommandEvent &event)
+void frame_main::on_click_clear_received(wxCommandEvent &event)
 {
-	textCtrl_received->Clear();
+	text_ctrl_received->Clear();
 }
 
-void Frame_main::OnClick_send(wxCommandEvent &event)
+void frame_main::on_click_send(wxCommandEvent &event)
 {
 	if (connected)
 	{
-		wxString text = textCtrl_send->GetValue();
+		wxString text = text_ctrl_send->GetValue();
 		
 		if (add_nl) text += "\n";
 		
@@ -982,7 +982,7 @@ void Frame_main::OnClick_send(wxCommandEvent &event)
 		
 		if (text != "")
 		{
-			serialPort->txString(text.ToStdString());
+			serial_port_driver->tx_string(text.ToStdString());
 			
 			#if DEBUG_LOG 
 			cout << "Tx = " << text << endl;
@@ -1004,22 +1004,21 @@ void Frame_main::OnClick_send(wxCommandEvent &event)
 
 
 //==================================================================
-// Clase App
+// Clase app
 //==================================================================
-class App : public wxApp
+class app : public wxApp
 {
 	public:
 		virtual bool OnInit();
 };
 
-IMPLEMENT_APP(App)
+IMPLEMENT_APP(app)
 
-bool App::OnInit()
+bool app::OnInit()
 {
-    Frame_main *frameMain = new Frame_main(WINDOW_TITLE, WINDOW_SIZE);
-    frameMain->Show(true);
+    frame_main *frame_main_window = new frame_main(window_title, window_size);
+    frame_main_window->Show(true);
 
     return true;
 }
 //==================================================================
-
