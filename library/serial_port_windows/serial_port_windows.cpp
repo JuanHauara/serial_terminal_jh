@@ -1,12 +1,15 @@
 #include "serial_port_windows.h"
 
 
-void serial_port::set_serial_port(string serial_port_name_arg)
+void serial_port::set_serial_port(const string &serial_port_name_arg)
 {
 	serial_port_name = serial_port_name_arg;
+
+	#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
 	cout << "Class serial_port_windows: serial_port_name_arg = " << serial_port_name_arg << endl;
 	cout << "Class serial_port_windows: serial_port_name = " << serial_port_name << endl;
 	cout << "Class serial_port_windows: serial_port_name.length() = " << serial_port_name.length() << endl;
+	#endif
 }
 
 void serial_port::set_baud_rate(uint32_t baud_rate)
@@ -41,11 +44,13 @@ void serial_port::use_rts(bool flag)
 
 string serial_port::get_serial_port(void)
 {
+
 	return serial_port_name;
 }
 
 uint32_t serial_port::get_baud_rate(void)
 {
+
 	return baud_rate;
 }
 
@@ -59,24 +64,70 @@ void serial_port::set_text_control(wxTextCtrl *text_control_received)
 	this->text_control_received = text_control_received;
 }
 
+bool serial_port::serial_handle_is_open(void)
+{
+
+	return (serial_handle != INVALID_HANDLE_VALUE);
+}
+
+bool serial_port::serial_parameters_are_valid(void)
+{
+	if (baud_rate == 0)
+	{
+		last_error = "Invalid baud rate.";
+
+		return false;
+	}
+
+	if ((data_bits < 5) || (data_bits > 8))
+	{
+		last_error = "Invalid data bit count.";
+
+		return false;
+	}
+
+	if ((parity != NOPARITY) && (parity != EVENPARITY) && (parity != ODDPARITY))
+	{
+		last_error = "Invalid parity setting.";
+
+		return false;
+	}
+
+	if ((stop_bits != ONESTOPBIT) && (stop_bits != ONE5STOPBITS) && (stop_bits != TWOSTOPBITS))
+	{
+		last_error = "Invalid stop bit setting.";
+
+		return false;
+	}
+
+	return true;
+}
+
 bool serial_port::set_timeouts(void)
 {
+	if (!serial_handle_is_open())
+	{
+		last_error = "Serial port is not open.";
+
+		return false;
+	}
+
 	COMMTIMEOUTS timeouts = {0};
 
-	// https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-commtimeouts
-	timeouts.ReadIntervalTimeout = MAXDWORD;	// La interfaz gráfica de traba si se pone otro valor que no sea este.
-	timeouts.ReadTotalTimeoutConstant = 0;		// La interfaz gráfica de traba si se pone otro valor que no sea este.
-	timeouts.ReadTotalTimeoutMultiplier = 0;	// La interfaz gráfica de traba si se pone otro valor que no sea este.
+	// Required by the non-blocking polling model used by the GUI timer.
+	timeouts.ReadIntervalTimeout = MAXDWORD;
+	timeouts.ReadTotalTimeoutConstant = 0;
+	timeouts.ReadTotalTimeoutMultiplier = 0;
 	timeouts.WriteTotalTimeoutConstant = 120;
 	timeouts.WriteTotalTimeoutMultiplier = 120;
 
-	if(SetCommTimeouts(serial_handle, &timeouts) == 0) 
+	if (SetCommTimeouts(serial_handle, &timeouts) == 0)
 	{
 		last_error = "Error trying to set time outs.";
-		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
+		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
 		cout << "Error trying to set time outs." << endl;
 		#endif
-		
+
 		return false;
 	}
 
@@ -85,64 +136,87 @@ bool serial_port::set_timeouts(void)
 
 bool serial_port::set_parameters(void)
 {
-	// Obtiene los parámetros del puerto serie
-	DCB serial_params = {0};
-	
-	serial_params.DCBlength = sizeof(serial_params);	// Esto es necesario por algún extraño capricho de Windows
-	
-	if (GetCommState(serial_handle, &serial_params) == 0)	// https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcommstate
+	if (!serial_handle_is_open())
 	{
-		last_error = "Error trying to get serial port configuration.";
-		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
-		cout << "Error trying to get serial port configuration." << endl;
-		#endif
-		disconnect();
-		
+		last_error = "Serial port is not open.";
+
 		return false;
 	}
-	
-	// Parámetros de la estructura DCB: https://docs.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-dcb
+
+	if (!serial_parameters_are_valid())
+	{
+
+		return false;
+	}
+
+	DCB serial_params = {0};
+
+	serial_params.DCBlength = sizeof(serial_params);
+
+	if (GetCommState(serial_handle, &serial_params) == 0)
+	{
+		last_error = "Error trying to get serial port configuration.";
+		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
+		cout << "Error trying to get serial port configuration." << endl;
+		#endif
+
+		return false;
+	}
+
 	serial_params.BaudRate = baud_rate;
 	serial_params.ByteSize = data_bits;
 	serial_params.Parity = parity;
 	serial_params.StopBits = stop_bits;
-	
-	if (flag_use_dtr) 
+
+	if (flag_use_dtr)
 	{
-		serial_params.fDtrControl = 1;
+		serial_params.fDtrControl = DTR_CONTROL_ENABLE;
 	}
-	else 
+	else
 	{
-		serial_params.fDtrControl = 0;
-	}
-	
-	if (flag_use_rts)
-	{
-		serial_params.fRtsControl = 1;
-	}
-	else 
-	{
-		serial_params.fRtsControl = 0;
+		serial_params.fDtrControl = DTR_CONTROL_DISABLE;
 	}
 
-	// Setea los parámetros en el puerto serie
-	if (SetCommState(serial_handle, &serial_params) == 0)	// https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setcommstate
+	if (flag_use_rts)
+	{
+		serial_params.fRtsControl = RTS_CONTROL_ENABLE;
+	}
+	else
+	{
+		serial_params.fRtsControl = RTS_CONTROL_DISABLE;
+	}
+
+	if (SetCommState(serial_handle, &serial_params) == 0)
 	{
 		last_error = "Error trying to set configuration in the serial port.";
-		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
+		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
 		cout << "Error trying to set configuration in the serial port." << endl;
 		#endif
-		disconnect();
-		
+
 		return false;
 	}
-	
+
 	return true;
 }
 
 bool serial_port::connect(void)
 {
-	// https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+	if (serial_handle_is_open())
+	{
+		last_error = "Serial port is already open.";
+
+		return false;
+	}
+
+	if (serial_port_name.empty())
+	{
+		last_error = "Serial port name is empty.";
+
+		return false;
+	}
+
+	last_error.clear();
+
 	string serial_port_path = "\\\\.\\" + serial_port_name;
 	serial_handle = CreateFileA(serial_port_path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -151,126 +225,187 @@ bool serial_port::connect(void)
 		if (GetLastError() == ERROR_FILE_NOT_FOUND)
 		{
 			last_error = "Serial port not found.";
-			
-			#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
+
+			#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
 			cout << "Serial port missing." << endl;
 			#endif
-			
+
 			return false;
 		}
-		
+
 		last_error = "The serial port is probably being used by another application.";
 
-		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
+		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
 		cout << "The serial port is probably being used by another application." << endl;
 		#endif
-		
+
 		return false;
 	}
-	
+
 	if (!set_timeouts())
 	{
+		disconnect();
+
 		return false;
 	}
-	
+
 	if (!set_parameters())
 	{
+		disconnect();
+
 		return false;
 	}
-	
+
 	return true;
 }
 
 bool serial_port::disconnect(void)
 {
-	if (CloseHandle(serial_handle) == 0)	// https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle
+	stop_serial_rx();
+
+	if (!serial_handle_is_open())
 	{
-		last_error = "Error trying to disconnect.";
-		
-		return false;
-	}
-	else
-	{
+
 		return true;
 	}
+
+	if (CloseHandle(serial_handle) == 0)
+	{
+		last_error = "Error trying to disconnect.";
+
+		return false;
+	}
+
+	serial_handle = INVALID_HANDLE_VALUE;
+
+	return true;
 }
 
-void serial_port::tx_string(string buff)
+bool serial_port::tx_string(const string &buff)
 {
-	// https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
-	WriteFile(serial_handle, buff.c_str(), strlen(buff.c_str()), NULL, NULL);
+	if (!serial_handle_is_open())
+	{
+		last_error = "Serial port is not open.";
+
+		return false;
+	}
+
+	if (buff.empty())
+	{
+
+		return true;
+	}
+
+	if (buff.size() > MAXDWORD)
+	{
+		last_error = "Transmit buffer is too large.";
+
+		return false;
+	}
+
+	DWORD bytes_to_write = static_cast<DWORD>(buff.size());
+	DWORD bytes_written = 0;
+
+	if (WriteFile(serial_handle, buff.data(), bytes_to_write, &bytes_written, NULL) == 0)
+	{
+		last_error = "Error trying to write serial port.";
+
+		return false;
+	}
+
+	if (bytes_written != bytes_to_write)
+	{
+		last_error = "Incomplete serial port write.";
+
+		return false;
+	}
+
+	return true;
 }
 
 string serial_port::poll_serial_port(void)
 {
 	DWORD bytes_read = 0;
-	
-	/*
-	 * https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile
-	 * 
-	 * El tiempo de polleo puede ser grande ya que el kernel del sistema
-	 * operativo guarda los Bytes recibidos en un buffer automaticamente.
-	 */ 
-	if ( !ReadFile(serial_handle, rx_buffer, RX_BUFFER_LEN, &bytes_read, NULL) )
+
+	if (!serial_handle_is_open())
 	{
-		last_error = "Error trying to read serial port.";
-		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
-		cout << "Error trying to read serial port." << endl;
-		#endif
-		
+		last_error = "Serial port is not open.";
+
 		return "";
 	}
-	
-	if (bytes_read >= sizeof(rx_buffer))
+
+	if (ReadFile(serial_handle, rx_buffer, RX_BUFFER_LEN, &bytes_read, NULL) == 0)
 	{
-		bytes_read = sizeof(rx_buffer) - 1;  // Saturate value
+		last_error = "Error trying to read serial port.";
+		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
+		cout << "Error trying to read serial port." << endl;
+		#endif
+
+		return "";
 	}
 
-	if (bytes_read > 0)	// Si recibió algún Byte
+	if (bytes_read >= sizeof(rx_buffer))
 	{
-		rx_buffer[bytes_read] = '\0';	// Agrega caracter de fin de cstring
-		string str(rx_buffer);		// Convierte a string
-		//str += "\n";				// Agrega nueva línea
-		
-		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS 
+		bytes_read = sizeof(rx_buffer);
+	}
+
+	if (bytes_read > 0)
+	{
+		string str(rx_buffer, bytes_read);
+
+		#if DEBUG_TERMINAL_SERIAL_PORT_WINDOWS
 		cout << "Rx " << bytes_read << " Bytes = " << str << endl;
 		#endif
-		
+
 		return str;
 	}
 	else
 	{
+
 		return "";
 	}
 }
 
 void serial_port::start_serial_rx(void)
 {
-	/*
-	 * Método heredado de wxTimer.
-	 * 
-	 * El tiempo de polleo puede ser grande ya que el kernel del sistema
-	 * operativo guarda los Bytes recibidos en un buffer automaticamente.
-	 */ 
+	if (!serial_handle_is_open())
+	{
+		last_error = "Serial port is not open.";
+
+		return;
+	}
+
 	Start(RECEIVED_TEXT_CONTROL_REFRESH_TIME, wxTIMER_CONTINUOUS);
 }
 
 void serial_port::stop_serial_rx(void)
 {
-	Stop();	// Método heredado de wxTimer.
+	if (IsRunning())
+	{
+		Stop();
+	}
 }
 
 void serial_port::Notify(void)
 {
-	/*
-	 * El tiempo de polleo puede ser grande ya que el kernel del sistema
-	 * operativo guarda los Bytes recibidos en un buffer automaticamente.
-	 */ 
+	if (text_control_received == NULL)
+	{
+		last_error = "Received text control is not set.";
+		stop_serial_rx();
+
+		return;
+	}
+
 	string str = poll_serial_port();
-	if (str != "") text_control_received->AppendText(str);
+
+	if (str != "")
+	{
+		text_control_received->AppendText(str);
+	}
 }
 
 string serial_port::get_last_error(void)
 {
+
 	return last_error;
 }

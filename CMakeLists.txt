@@ -2,20 +2,16 @@ cmake_minimum_required(VERSION 3.10)
 
 project(serial_terminal)
 
-# Usar estandar C++11
+# Use the C++11 standard.
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Este flag es para que no mostrar la terminal (CMD) de windows al ejecutar el programa.
-# Comentar esta línea si se necesita el CMD para ver los mensajes de debugging.
-set(CMAKE_CXX_FLAGS "-mwindows")
-
-# Librería WxWidgets.
-# Especificar la ruta a la librería wxWidgets instalada.
-set(wxWidgets_ROOT_DIR C:/wxWidgets-3.2.10)
+# wxWidgets library.
+# Set the path to the installed wxWidgets library.
+set(wxWidgets_ROOT_DIR "C:/wxWidgets-3.2.10" CACHE PATH "Path to the wxWidgets installation.")
 find_package(wxWidgets REQUIRED COMPONENTS core base gl net OPTIONAL_COMPONENTS)
-# Incluir directorios de la librería.
+# Include library directories.
 include(${wxWidgets_USE_FILE})
 
 add_executable(${PROJECT_NAME} main.cpp
@@ -26,10 +22,15 @@ add_executable(${PROJECT_NAME} main.cpp
 	library/persistent_data/persistent_data.cpp
 )
 
+if(WIN32)
+	# Build as a Windows GUI application, without opening a console window.
+	set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/library"
 	"${PROJECT_SOURCE_DIR}/library/serial_port_windows"
-    "${PROJECT_SOURCE_DIR}/library/persistent_data"
+	"${PROJECT_SOURCE_DIR}/library/persistent_data"
 )
 
 target_link_libraries(${PROJECT_NAME} 

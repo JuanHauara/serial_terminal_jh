@@ -19,7 +19,7 @@ The current Windows build setup uses:
 The CMake file currently looks for wxWidgets with:
 
 ```cmake
-set(wxWidgets_ROOT_DIR C:/wxWidgets-3.2.10)
+set(wxWidgets_ROOT_DIR "C:/wxWidgets-3.2.10" CACHE PATH "Path to the wxWidgets installation.")
 find_package(wxWidgets REQUIRED COMPONENTS core base gl net OPTIONAL_COMPONENTS)
 ```
 
@@ -48,8 +48,8 @@ The Windows executable is generated as:
 build/serial_terminal.exe
 ```
 
-`CMakeLists.txt` also sets `-mwindows` so the application starts without opening
-a separate Windows console.
+`CMakeLists.txt` builds the target as a Windows GUI application, so it starts
+without opening a separate Windows console.
 
 ### Build from VS Code tasks on Windows
 

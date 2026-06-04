@@ -2,45 +2,45 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Configure & Build", // Cambiado a Build para reflejar mejor la acción
+            "label": "Configure & Build", // Name matches the configure and build action.
             "type": "shell",
             "windows": {
-                // Comando corregido para PowerShell y usando cmake --build
+                // PowerShell command that configures CMake and then builds with cmake --build.
                 "command": "$env:Path = 'C:\\TDM-GCC-64\\bin;' + $env:Path; if (!(Test-Path -Path '${workspaceFolder}/build')) { New-Item -Path '${workspaceFolder}/build' -ItemType Directory }; Set-Location -Path '${workspaceFolder}/build'; cmake -G 'MinGW Makefiles' -DCMAKE_C_COMPILER='C:/TDM-GCC-64/bin/gcc.exe' -DCMAKE_CXX_COMPILER='C:/TDM-GCC-64/bin/g++.exe' ..; if ($?) { cmake --build . }"
             },
             "linux": {
-                // Ya usaba cmake --build ., está bien
+                // Configure and build with the default CMake generator.
                 "command": "mkdir -p '${workspaceFolder}/build/' && cd '${workspaceFolder}/build/' && cmake .. && cmake --build ."
             },
             "osx": {
-                 // Ya usaba cmake --build ., está bien
+                 // Configure and build with the default CMake generator.
                 "command": "mkdir -p '${workspaceFolder}/build/' && cd '${workspaceFolder}/build/' && cmake .. && cmake --build ."
             },
             "options": {
-                // cwd ya está bien, asegura que los comandos relativos como 'build' o '..' funcionen
+                // Keep relative paths such as 'build' and '..' rooted at the workspace.
                 "cwd": "${workspaceFolder}"
             },
             "group": {
                 "kind": "build",
-                "isDefault": true // Puedes ponerlo a true si quieres que sea la tarea por defecto (Ctrl+Shift+B)
+                "isDefault": true // Default build task used by Ctrl+Shift+B.
             },
             "problemMatcher": [
-                "$gcc" // Añadido problem matcher para errores de GCC
+                "$gcc" // GCC problem matcher.
             ]
         },
         {
             "label": "Clean",
             "type": "shell",
             "windows": {
-                 // Este comando está bien para PowerShell
+                 // PowerShell clean command.
                 "command": "if (Test-Path -Path '${workspaceFolder}/build') { Remove-Item -Path '${workspaceFolder}/build' -Recurse -Force }"
             },
             "linux": {
-                // rm necesita -r -f para borrar directorios no vacíos de forma segura
+                // Remove the non-empty build directory.
                 "command": "rm -rf '${workspaceFolder}/build'"
             },
             "osx": {
-                 // rm necesita -r -f para borrar directorios no vacíos de forma segura
+                 // Remove the non-empty build directory.
                 "command": "rm -rf '${workspaceFolder}/build'"
             },
             "options": {

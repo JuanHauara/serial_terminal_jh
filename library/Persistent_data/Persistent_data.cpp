@@ -1,258 +1,339 @@
 #include "persistent_data.h"
 
-persistent_data::persistent_data(string data_file_name)
+persistent_data::persistent_data(const string &data_file_name)
 {
 	this->data_file_name = data_file_name;
 }
 
 bool persistent_data::load_data(void)
 {
-	ifstream myfile;
-	myfile.open(data_file_name);  // Abre el archivo para lectura.
-	string line;
-	
-	if (myfile.is_open())
+	var_name.clear();
+	var_value.clear();
+	var_count = 0;
+
+	if (data_file_name.empty())
 	{
+		cerr << "Persistent data file name is empty." << endl;
+
+		return false;
+	}
+
+	ifstream myfile;
+	myfile.open(data_file_name);
+
+	if (!myfile.is_open())
+	{
+		#if DEBUG_LOG
+		cout << "Error trying to open persistent data file '" << data_file_name << "'" << endl;
+		#endif
+
+		return false;
+	}
+
+	string line;
+	int line_number = 0;
+
+	while (getline(myfile, line))
+	{
+		line_number++;
+
+		if (line.empty())
+		{
+			continue;
+		}
+
+		if (!parse_line(line))
+		{
+			cerr << "Ignoring malformed persistent data line " << line_number << "." << endl;
+		}
+
+		#if DEBUG_LOG
+		cout << line << endl;
+		cout << "-------------" << endl;
+		#endif
+	}
+
+	if (myfile.bad())
+	{
+		cerr << "Error reading persistent data file '" << data_file_name << "'" << endl;
+
 		var_name.clear();
 		var_value.clear();
-		int index = 0;
-		while (getline(myfile, line))
-		{
-			parse_line(line, index);
-			index++;
-			
-			#if DEBUG_LOG
-			cout << line << endl;
-			cout << var_name[index - 1] << endl;
-			cout << var_value[index - 1] << endl;
-			cout << "-------------" << endl;
-			#endif
-		}
-		
-		myfile.close();
-		var_count = var_name.size();  // Cantidad total de variables persistentes.
-		#if DEBUG_LOG
-		cout << "cantidad total de variables persistentes = " << var_count << endl;  // DEBUG
-		#endif
-		
-		return true;
+		var_count = 0;
+
+		return false;
 	}
+
+	myfile.close();
+	var_count = static_cast<int>(var_name.size());
+
 	#if DEBUG_LOG
-	else 
-	{
-		cout << "Error al intentar abrir archivo " << data_file_name << endl;
-	}
+	cout << "Persistent variable count = " << var_count << endl;
 	#endif
-	
-	return false;
+
+	return true;
 }
 
-void persistent_data::parse_line(string line, int index)
+bool persistent_data::parse_line(const string &line)
 {
-	/*
-	 * Primero busca el caracter "=" y luego divide la línea de texto en 
-	 * "nombre de variable" y "valor de variable".
-	 */
-	  
-	int ind = line.find('=');
-	
-	if (ind > 0)
+	size_t separator_index = line.find('=');
+
+	if ((separator_index == string::npos) || (separator_index == 0))
 	{
-		string str_var_name = line.substr(0, ind);
-		string str_var_value = line.substr(ind + 1, line.length());
-		
-		var_name.push_back(str_var_name);
-		var_value.push_back(str_var_value);
+
+		return false;
 	}
+
+	string parsed_var_name = line.substr(0, separator_index);
+	string parsed_var_value = line.substr(separator_index + 1);
+
+	for (size_t i = 0; i < var_name.size(); i++)
+	{
+		if (var_name[i] == parsed_var_name)
+		{
+			var_value[i] = parsed_var_value;
+
+			return true;
+		}
+	}
+
+	var_name.push_back(parsed_var_name);
+	var_value.push_back(parsed_var_value);
+	var_count = static_cast<int>(var_name.size());
+
+	return true;
 }
 
-int persistent_data::seek_var_index(string target_var_name)
+bool persistent_data::write_data(void)
 {
-	/*
-	 * Devuelve el index de la variable persistente de nombre "target_var_name".
-	 */
-	
+	if (data_file_name.empty())
+	{
+		cerr << "Persistent data file name is empty." << endl;
+
+		return false;
+	}
+
+	ofstream myfile;
+	myfile.open(data_file_name, ios::trunc);
+
+	if (!myfile.is_open())
+	{
+		cerr << "Error trying to open persistent data file '" << data_file_name << "' for writing." << endl;
+
+		return false;
+	}
+
+	for (size_t i = 0; i < var_name.size(); i++)
+	{
+		myfile << var_name[i] << "=" << var_value[i] << endl;
+	}
+
+	if (!myfile.good())
+	{
+		cerr << "Error writing persistent data file '" << data_file_name << "'." << endl;
+
+		return false;
+	}
+
+	myfile.close();
+
+	if (myfile.fail())
+	{
+		cerr << "Error closing persistent data file '" << data_file_name << "'." << endl;
+
+		return false;
+	}
+
+	return true;
+}
+
+int persistent_data::seek_var_index(const string &target_var_name)
+{
 	for (int i = 0; i < var_count; i++)
 	{
-		if (var_name[i] == target_var_name) return i;
+		if (var_name[i] == target_var_name)
+		{
+
+			return i;
+		}
 	}
-	
+
 	#if DEBUG_LOG
-	cout << "Error: No existe la variable persistente '" << target_var_name << "'" << endl;
+	cout << "Persistent variable '" << target_var_name << "' does not exist." << endl;
 	#endif
-	
+
 	return -1;
 }
 
-int persistent_data::get_int(string target_var_name)
+int persistent_data::get_int(const string &target_var_name)
 {
-	// Devuelve 0 si no encuentra la variable en el archivo.
-	
 	int index = seek_var_index(target_var_name);
-	
-	if (index >= 0)
+
+	if (index < 0)
 	{
-		int n = 0;
-		try 
-		{
-			n = stoi(var_value[index]);
-		}
-		catch (const std::invalid_argument& e) 
-		{
-			cerr << "Error al intentar leer variable persistente tipo int '" << target_var_name << "'" << endl;
-		}
-  
-		return n;
-	}
-	else 
-	{
+
 		return 0;
 	}
+
+	int n = 0;
+	size_t processed_chars = 0;
+
+	try
+	{
+		n = stoi(var_value[index], &processed_chars);
+	}
+	catch (const exception &e)
+	{
+		cerr << "Error reading persistent int variable '" << target_var_name << "'." << endl;
+
+		return 0;
+	}
+
+	if (processed_chars != var_value[index].length())
+	{
+		cerr << "Invalid persistent int variable '" << target_var_name << "'." << endl;
+
+		return 0;
+	}
+
+	return n;
 }
 
-float persistent_data::get_float(string target_var_name)
+float persistent_data::get_float(const string &target_var_name)
 {
-	// Devuelve 0.0 si no encuentra la variable en el archivo.
-	
 	int index = seek_var_index(target_var_name);
-	
-	if (index >= 0)
+
+	if (index < 0)
 	{
-		float n = 0.0;
-		try 
-		{
-			n = stof(var_value[index]);
-		}
-		catch (const std::invalid_argument& e) 
-		{
-			cerr << "Error al intentar leer variable persistente tipo float '" << target_var_name << "'" << endl;
-		}
-  
-		return n;
-	}
-	else 
-	{
+
 		return 0.0;
 	}
+
+	float n = 0.0;
+	size_t processed_chars = 0;
+
+	try
+	{
+		n = stof(var_value[index], &processed_chars);
+	}
+	catch (const exception &e)
+	{
+		cerr << "Error reading persistent float variable '" << target_var_name << "'." << endl;
+
+		return 0.0;
+	}
+
+	if (processed_chars != var_value[index].length())
+	{
+		cerr << "Invalid persistent float variable '" << target_var_name << "'." << endl;
+
+		return 0.0;
+	}
+
+	return n;
 }
 
-string persistent_data::get_string(string target_var_name)
+string persistent_data::get_string(const string &target_var_name)
 {
-	// Devuelve "" si no encuentra la variable en el archivo.
-	
 	int index = seek_var_index(target_var_name);
-	
-	if (index >= 0)
+
+	if (index < 0)
 	{
-		return var_value[index];
-	}
-	else
-	{
+
 		return "";
 	}
+
+	return var_value[index];
 }
 
-bool persistent_data::get_bool(string target_var_name)
+bool persistent_data::get_bool(const string &target_var_name)
 {
-	// Devuelve false si no encuentra la variable en el archivo.
-	
 	int index = seek_var_index(target_var_name);
-	
-	if (index >= 0)
+
+	if (index < 0)
 	{
-		if (var_value[index] == "true")
-		{
-			return true;
-		}
-		else if (var_value[index] == "false")
-		{
-			return false;
-		}
-		else
-		{
-			cerr << "Error al intentar leer variable persistente tipo bool '" << target_var_name << "'" << endl;
-		}
+
+		return false;
 	}
+
+	if (var_value[index] == "true")
+	{
+
+		return true;
+	}
+
+	if (var_value[index] == "false")
+	{
+
+		return false;
+	}
+
+	cerr << "Invalid persistent bool variable '" << target_var_name << "'." << endl;
 
 	return false;
 }
 
-void persistent_data::set_string(string target_var_name, string target_var_value)
+bool persistent_data::set_string(const string &target_var_name, const string &target_var_value)
 {
-	/*
-		Primero se fija si la variable existe, si no existe la crea y la 
-		inicializa. 
-		Si la variable persistente ya existe, setea su valor a target_var_value
-		en RAM y en el archivo persistentData.dat.
-	*/
-	ofstream myfile;
-	
-	// Deuelve el index de la variable dentro del vector en memoria RAM
-	// o -1 si no existe.
+	if (target_var_name.empty())
+	{
+		cerr << "Persistent variable name is empty." << endl;
+
+		return false;
+	}
+
 	int index = seek_var_index(target_var_name);
-	
-	if (index >= 0)  // si ya existe
+
+	if (index >= 0)
 	{
-		/*
-			Actualiza el nuevo valor en el disco y en la RAM.
-			Abre el archivo para escritura y si ya existe borra el contenido previo.
-		*/
-		myfile.open(data_file_name, ios::trunc);
-		
-		for (int i = 0; i < var_count; i++)
+		string previous_value = var_value[index];
+		var_value[index] = target_var_value;
+
+		if (!write_data())
 		{
-			if (var_name[i] == target_var_name)
-			{
-				// Actualiza el nuevo valor en el disco.
-				myfile << var_name[i] << "=" << target_var_value << endl;
-				
-				// Y también lo actualiza en RAM.
-				var_value[i] = target_var_value;
-			}
-			else
-			{
-				myfile << var_name[i] << "=" << var_value[i] << endl;
-			}
+			var_value[index] = previous_value;
+
+			return false;
 		}
-		
-		myfile.close();
+
+		return true;
 	}
-	else
+
+	var_name.push_back(target_var_name);
+	var_value.push_back(target_var_value);
+	var_count = static_cast<int>(var_name.size());
+
+	if (!write_data())
 	{
-		// Si no existe agrega la nueva variable al final del archivo.
-		// Abre el archivo como escritura y para agregar al final.
-		myfile.open(data_file_name, ios::app);
-		myfile << target_var_name << "=" << target_var_value << endl;
-		myfile.close();
-		
-		// Y también la agrega en RAM.
-		var_name.push_back(target_var_name);
-		var_value.push_back(target_var_value);
-		
-		var_count++;  // Agregó una variable más.
+		var_name.pop_back();
+		var_value.pop_back();
+		var_count = static_cast<int>(var_name.size());
+
+		return false;
 	}
+
+	return true;
 }
 
-void persistent_data::set_int(string target_var_name, int target_var_value)
+bool persistent_data::set_int(const string &target_var_name, int target_var_value)
 {
-	set_string(target_var_name, to_string(target_var_value));
+
+	return set_string(target_var_name, to_string(target_var_value));
 }
 
-void persistent_data::set_float(string target_var_name, float target_var_value)
+bool persistent_data::set_float(const string &target_var_name, float target_var_value)
 {
-	set_string(target_var_name, to_string(target_var_value));
+
+	return set_string(target_var_name, to_string(target_var_value));
 }
 
-void persistent_data::set_bool(string target_var_name, bool target_var_value)
+bool persistent_data::set_bool(const string &target_var_name, bool target_var_value)
 {
 	if (target_var_value)
 	{
-		set_string(target_var_name, "true");
+
+		return set_string(target_var_name, "true");
 	}
-	else
-	{
-		set_string(target_var_name, "false");
-	}
+
+	return set_string(target_var_name, "false");
 }
-
-
