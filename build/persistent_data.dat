@@ -1,9 +1,0 @@
-selected_serialPort=
-baudRate=9600
-dataBits=8
-parity=0
-stopBits=0
-useDtr=false
-useRts=false
-add_nl=false
-add_cr=false

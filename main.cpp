@@ -36,7 +36,7 @@ using namespace chrono;
 	#include "serial_port_windows.h"
 #endif
 
-const wxString software_version("v0.1.3");
+const wxString software_version("v0.2.0");
 const wxString window_title("Serial Terminal");
 const wxString email_contact("juanhauara@gmail.com");
 const wxString web_contact("");
